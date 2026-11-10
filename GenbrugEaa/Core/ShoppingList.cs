@@ -1,6 +1,17 @@
-namespace Core;
+using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
-public class ShoppingList
+namespace Core
 {
-    
+    public class ShoppingLists
+    {
+        [Key]//betyder primary key og den er unik
+        public int Id { get; set; }
+
+        [Required] //Feltet må ikke være NULL
+        public int BuyerId { get; set; }
+
+        [Required] //Feltet må ikke være NULL
+        public List<int> AdIds { get; set; } = new List<int>();
+    }
 }
