@@ -5,17 +5,16 @@ namespace Backend.Repositories;
 
 public class PurchaseRequestRepository
 {
+    // Reference til PurchaseRequests-collection
     private readonly IMongoCollection<PurchaseRequest> _purchaseRequests;
 
-    public PurchaseRequestRepository(IMongoClient mongoClient)
+    // Constructor forbinder repository med MongoDB
+    public PurchaseRequestRepository(IMongoClient mongoClient, IConfiguration configuration)
     {
-        var database = mongoClient.GetDatabase("GenbrugDB");
+        string databaseName = configuration["MongoDb:DatabaseName"] ?? "GenbrugDB";
+
+        IMongoDatabase database = mongoClient.GetDatabase(databaseName);
 
         _purchaseRequests = database.GetCollection<PurchaseRequest>("PurchaseRequests");
-    }
-
-    public List<PurchaseRequest> GetAllPurchaseRequests()
-    {
-        return _purchaseRequests.Find(_ => true).ToList();
     }
 }

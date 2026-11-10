@@ -5,17 +5,16 @@ namespace Backend.Repositories;
 
 public class UserRepository
 {
+    // Reference til Users-collection
     private readonly IMongoCollection<User> _users;
 
-    public UserRepository(IMongoClient mongoClient)
+    // Constructor forbinder repository med MongoDB
+    public UserRepository(IMongoClient mongoClient, IConfiguration configuration)
     {
-        var database = mongoClient.GetDatabase("GenbrugDB");
+        string databaseName = configuration["MongoDb:DatabaseName"] ?? "GenbrugDB";
+
+        IMongoDatabase database = mongoClient.GetDatabase(databaseName);
 
         _users = database.GetCollection<User>("Users");
-    }
-
-    public List<User> GetAllUsers()
-    {
-        return _users.Find(_ => true).ToList();
     }
 }

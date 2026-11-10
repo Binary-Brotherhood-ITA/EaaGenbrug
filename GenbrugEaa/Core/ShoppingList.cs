@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Core
 {
-    public class ShoppingLists
+    public class ShoppingList
     {
         [Key]//betyder primary key og den er unik
         public int Id { get; set; }

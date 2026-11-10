@@ -5,17 +5,16 @@ namespace Backend.Repositories;
 
 public class ShoppingListRepository
 {
+    // Reference til ShoppingLists-collection
     private readonly IMongoCollection<ShoppingList> _shoppingLists;
 
-    public ShoppingListRepository(IMongoClient mongoClient)
+    // Constructor forbinder repository med MongoDB
+    public ShoppingListRepository(IMongoClient mongoClient, IConfiguration configuration)
     {
-        var database = mongoClient.GetDatabase("GenbrugDB");
+        string databaseName = configuration["MongoDb:DatabaseName"] ?? "GenbrugDB";
+
+        IMongoDatabase database = mongoClient.GetDatabase(databaseName);
 
         _shoppingLists = database.GetCollection<ShoppingList>("ShoppingLists");
-    }
-
-    public List<ShoppingList> GetAllShoppingLists()
-    {
-        return _shoppingLists.Find(_ => true).ToList();
     }
 }

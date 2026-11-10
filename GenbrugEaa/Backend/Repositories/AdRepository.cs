@@ -5,12 +5,20 @@ namespace Backend.Repositories;
 
 public class AdRepository
 {
+    // Reference til Ads-collection i MongoDB
     private readonly IMongoCollection<Ad> _ads;
 
-    public AdRepository(IMongoClient mongoClient)
+    // Constructor forbinder repository med databasen
+    public AdRepository(IMongoClient mongoClient, IConfiguration configuration)
     {
-        var database = mongoClient.GetDatabase("GenbrugDB");
+        // Henter databasenavnet fra appsettings
+        string databaseName = configuration["MongoDb:DatabaseName"] ?? "GenbrugDB";
 
+        // Finder databasen
+        IMongoDatabase database = mongoClient.GetDatabase(databaseName);
+
+        // Finder Ads-collection
         _ads = database.GetCollection<Ad>("Ads");
     }
-}
+}    
+    

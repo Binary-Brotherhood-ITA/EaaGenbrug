@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Core
 {
-    public class PurchaseRequests
+    public class PurchaseRequest
     {
         [Key] //betyder primary key og den er unik
         public int Id { get; set; }
