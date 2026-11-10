@@ -1,3 +1,5 @@
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 namespace Core;
 
 public class Ad
@@ -18,6 +20,7 @@ public class Ad
     public string Category { get; set; } 
 
     // Varens pris
+    [BsonRepresentation(BsonType.Decimal128)]
     public decimal Price { get; set; }
 
     // Beskrivelse af varen
