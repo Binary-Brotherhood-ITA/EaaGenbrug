@@ -1,6 +1,6 @@
 namespace Core;
 
-public class Ads
+public class User
 {
     
 }
