@@ -20,5 +20,12 @@ public class AdRepository
         // Finder Ads-collection
         _ads = database.GetCollection<Ad>("Ads");
     }
+
+    // Henter alle annoncer
+    public List<Ad> GetAllAds()
+    {
+        return _ads.Find(_ => true).ToList();
+    }
+
 }    
     
