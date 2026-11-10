@@ -12,6 +12,7 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
 // Registrerer alle vores repositories
 builder.Services.AddScoped<AdRepository>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserLoginRepository>();
 builder.Services.AddScoped<ShoppingListRepository>();
 builder.Services.AddScoped<PurchaseRequestRepository>();
 

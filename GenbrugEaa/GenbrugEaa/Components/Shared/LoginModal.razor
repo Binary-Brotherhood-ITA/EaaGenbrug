@@ -1,0 +1,76 @@
+﻿@using GenbrugEaa.Services
+@inject NavigationManager nav
+@inject LoginService login
+
+<button class="btn btn-primary" @onclick="OpenLoginModal">
+    Log ind
+</button>
+
+@if (showLoginModal)
+{
+    <div class="modal-overlay" @onclick="CloseLoginModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+
+            <h4>Log ind</h4>
+
+            <InputText @bind-Value="username"
+                       class="form-control mb-2"
+                       placeholder="Indtast brugernavn" />
+
+            <InputText type="password"
+                       @bind-Value="password"
+                       class="form-control mb-2"
+                       placeholder="Indtast password" />
+
+            @if (!string.IsNullOrEmpty(errorText))
+            {
+                <div class="error-message">
+                    ⚠️ @errorText
+                </div>
+            }
+
+            <button class="btn btn-primary" @onclick="OnClickLogin">
+                Log ind
+            </button>
+
+            <button class="btn btn-secondary" @onclick="CloseLoginModal">
+                Annuller
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string errorText = "";
+
+    private bool showLoginModal = false;
+
+    private void OpenLoginModal()
+    {
+        showLoginModal = true;
+    }
+
+    private void CloseLoginModal()
+    {
+        showLoginModal = false;
+        errorText = "";
+    }
+
+    private async Task OnClickLogin()
+    {
+        bool isValid = await login.UserLogin(username, password);
+
+        if (isValid)
+        {
+            await login.SetUserSession(username);
+            CloseLoginModal();
+            nav.NavigateTo("/");
+        }
+        else
+        {
+            errorText = "Forkert brugernavn eller password";
+        }
+    }
+}
