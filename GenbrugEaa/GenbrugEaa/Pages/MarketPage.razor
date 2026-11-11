@@ -1,33 +1,82 @@
 ﻿@page "/market"
 @inject HttpClient Http
+@inject LoginService login
 @using Core
 
 <h3>Marked</h3>
 @if (contentLoaded)
 {
-	@if(activeAds != null)
-	{
-	<p>Antal aktive annoncer: @activeAds.Count</p>
-	}
-	@if (!string.IsNullOrEmpty(contentMsg))
+	if(!string.IsNullOrEmpty(contentMsg))
 	{
 		@contentMsg
+	}
+	if(isLoggedIn && activeAds != null)
+	{
+		<p>Antal aktive annoncer: @activeAds.Count</p>
+
+		<div class="row">
+			@foreach (Ad ad in activeAds)
+			{
+				<div class="col-md-4 mb-3">
+			        <div class="border p-3">
+						<!-- Viser kun et billede, hvis ad.ImgPath ikke er tomt -->
+						@if (!string.IsNullOrWhiteSpace(ad.ImgPath))
+						{
+							<img src="@ad.ImgPath"
+								 alt="@ad.Category"
+								 class="img-fluid mb-3"
+								 style="width: 100%; height: 250px; object-fit: cover;" />
+						}
+						<h4>@ad.Name</h4>
+						<p>Kategori: @ad.Category</p>
+						<p>Pris: @ad.Price</p>
+						<p>Oprettet: @ad.CreatedAt</p>
+						<div class="col-md-3 mb-3">
+							<button type="button" class="btn btn-primary mt-2"
+								onclick="OpenAdModal(@ad.Id)">
+								Vis mere
+							</button>
+							<button type="button" class="btn btn-primary mt-2"
+									disabled="@(ad.SellerId == userId)"
+									@onclick="() => AddToShoppingList(ad.Id)"> <!-- TODO: TJEK USER.ID MED AD.SELLERID -->
+								Tilføj til indkøb
+							</button>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
 	}
 }
 
 
 @code {
-	// List til active annoncer
-	private List<Ad>? activeAds = new List<Ad>();
+	private List<Ad>? activeAds = new();// List til active annoncer
+	private List<Ad>? filteredAds = new();// List til filter og søgning
 	private bool contentLoaded = false;
 	private string contentMsg = "";
+	private bool isLoggedIn = false;
+	private int? userId = null;
 
 	// Henter List med Ads, hvor Ad.Status==Active. Hvis der returneres null laves en ny tom List. 
 	protected override async Task OnInitializedAsync()
 	{
+		// Tjekker om bruger er logget ind ifølge sessionStorage
+		isLoggedIn = await login.IsLoggedIn();
+		if(!isLoggedIn)
+		{
+			contentMsg = "Log ind for at se indhold";
+			contentLoaded = true;
+			return;
+		}
+
+		// Finder User.Id
+		userId = await login.GetUserId();
+
+		// Henter Ads fra backend
 		activeAds = await Http.GetFromJsonAsync<List<Ad>>("api/ad/active") ?? new List<Ad>();
 		contentLoaded = true;
-		if(activeAds == null)
+		if(activeAds.Count == 0)
 		{
 			contentMsg = "Der kunne ikke indlæses nogen annoncer";
 		}
@@ -35,5 +84,10 @@
 		{
 			contentMsg = "";
 		}
+	}
+
+	private async Task AddToShoppingList(int adId)
+	{
+		// Kald Controller API AddToShoppingList(userId, AdId)
 	}
 }

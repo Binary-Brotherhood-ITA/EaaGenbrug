@@ -22,12 +22,13 @@ namespace Backend.Repositories
         }
 
         /* Søger efter en bruger med det angivne username.
-         * Hvis der findes en bruger er resultatet af .Find().FirstOrDefault ikke null og der returneres true
-         * Ellers er resultatet null og der returneres false.
+         * Hvis der findes en bruger er resultatet af .Find().FirstOrDefault ikke null og der returneres et User objekt
+         * Ellers returneres null
          */
-        public bool UserLogin(string username, string password)
+        public User? UserLogin(string username, string password)
         {
-            return _userlogins.Find(userlogin => userlogin.Username == username && userlogin.Password == password).FirstOrDefault() != null;
+            User? userFound = _userlogins.Find(userlogin => userlogin.Username == username && userlogin.Password == password).FirstOrDefault();
+            return userFound;
         }
     }
 }

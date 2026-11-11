@@ -78,13 +78,14 @@
 
     // kalder LoginService.UserLogin for at tjekke oplysninger i backend. 
     // Hvis true, kaldes LoginService.SetUserSession og modal vinduet lukker. 
+    // Nødt til at skrive userId.Value, fordi LoginService forventer en int. .Value beregner heltalsværdien int-værdien. 
     private async Task OnClickLogin()
     {
-        bool isValid = await login.UserLogin(username, password);
+        int? userId = await login.UserLogin(username, password);
 
-        if (isValid)
+        if (userId != null)
         {
-            await login.SetUserSession(username);
+            await login.SetUserSession(userId.Value, username);
             isLoggedIn = true;
             CloseLoginModal();
             nav.NavigateTo("/");

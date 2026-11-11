@@ -28,33 +28,46 @@ namespace GenbrugEaa.Services
 
         /* UserLogin():
          * Opretter nyt UserLogin objekt. 
-         * Kalder Post API hos LoginController
+         * Kalder Post API hos UserLoginController
+         * Den får response som er et HTTP-svar fra UserLoginController.
+         * Hvis der er success, så læser vi JSON-indholdet og gememr det som loggedInUser og returnerer Id. 
+         * Ellers returneres null.
          */
-        public async Task<bool> UserLogin(string username, string password)
+        public async Task<int?> UserLogin(string username, string password)
         {
             User user = new User { Username = username, Password = password };
 
             HttpResponseMessage response = await Http.PostAsJsonAsync("api/login", user);
 
-            return response.IsSuccessStatusCode;
+            if(response.IsSuccessStatusCode)
+            {
+                User? loggedInUser = await response.Content.ReadFromJsonAsync<User>();
+                return loggedInUser?.Id;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /* SetUserSession():
          * Hvis et login er gyldigt skal LoginService.SetUserSession(username) kaldes. 
          * gemmer username og bool i sessionStorage - fortæller hvilken bruger og om bruger er logget ind.
          */
-        public async Task SetUserSession(string username)
+        public async Task SetUserSession(int userId, string username)
         {
+            await sessionStorage.SetItemAsync("userId", userId);
             await sessionStorage.SetItemAsync("username", username);
             await sessionStorage.SetItemAsync("isLoggedIn", true);
         }
 
         /* Logout():
          * Når bruger logger ud skal LoginService.Logout kaldes
-         * Fjerner info om username og om bruger er logget ind fra sessionStorage.
+         * Fjerner info om userId, username og om bruger er logget ind fra sessionStorage.
          */
         public async Task Logout()
         {
+            await sessionStorage.RemoveItemAsync("userId");
             await sessionStorage.RemoveItemAsync("username");
             await sessionStorage.RemoveItemAsync("isLoggedIn");
         }
@@ -67,9 +80,10 @@ namespace GenbrugEaa.Services
          */
         public async Task<bool> IsLoggedIn()
         {
-            string? username = await sessionStorage.GetItemAsync<string>("username");
+            int? userId = await sessionStorage.GetItemAsync<int?>("userId");
+            string? username = await sessionStorage.GetItemAsync<string?>("username");
             bool isLoggedIn = await sessionStorage.GetItemAsync<bool>("isLoggedIn");
-            if (isLoggedIn && username != null)
+            if (userId != null && username != null && isLoggedIn)
             {
                 return true;
             }
@@ -78,5 +92,14 @@ namespace GenbrugEaa.Services
                 return false;
             }
         }
+
+        /* GetUserId():
+         * returnerer userId fra sessionStorage
+         */
+        public async Task<int> GetUserId()
+        {
+            return await sessionStorage.GetItemAsync<int>("userId");
+        }
+
     }
 }

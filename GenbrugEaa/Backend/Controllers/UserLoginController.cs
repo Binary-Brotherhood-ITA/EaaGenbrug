@@ -17,21 +17,20 @@ namespace Backend.Controllers
 
         /* HttpPost:
          * Kalder loginRepo.UserLogin
-         * Modtager bool retur, som indikerer om brugerlogin er gyldigt eller ej
+         * Modtager User-objekt eller null, som indikerer om brugerlogin er gyldigt eller ej
+         * returnerer User-objekt eller null
          */
         [HttpPost]
         public IActionResult UserLogin(User user)
         {
-            string username = user.Username;
-            string password = user.Password;
-            bool isValid = ulr.UserLogin(username, password);
-            if(isValid)
+            User? userFound = ulr.UserLogin(user.Username, user.Password);
+            if(userFound != null)
             {
-                return Ok(true);
+                return Ok(userFound);
             }
             else
             {
-                return Unauthorized(false);
+                return Unauthorized();
             }
         }
 

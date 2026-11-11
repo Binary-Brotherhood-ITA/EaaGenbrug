@@ -1,0 +1,62 @@
+/* CSS for MarketPage component */
+h3 {
+    margin: 0 0 32px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--ws-border);
+    color: var(--ws-text);
+    font-size: clamp(2.4rem, 4.5vw, 4.2rem);
+    line-height: 1.1;
+}
+
+/* Kortgrid: tre produkter på stor skærm. */
+.row {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 30px 20px;
+    margin: 0 !important;
+}
+
+.row > .col-md-4 {
+    min-width: 0;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Fjerner Bootstrap-boksen, så billederne bliver det visuelle fokus. */
+.row > .col-md-4 > .border {
+    height: 100%;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent;
+}
+
+.row > .col-md-4 > .border > img {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    background: var(--ws-soft);
+    margin: 0 auto 13px !important;
+    transition: filter .25s ease;
+}
+
+.row > .col-md-4:hover > .border > img {
+    filter: brightness(0.97);
+}
+
+/* Pæn placeholder, hvis et produkt ikke har et billedlink. */
+.row > .col-md-4 > .border:not(:has(img))::before {
+    content: "IMAGE NOT FOUND";
+    display: grid;
+    place-items: center;
+    aspect-ratio: 3 / 4;
+    margin-bottom: 13px;
+    background: linear-gradient(145deg, #eee7df, #d9c8be);
+    color: #86746e;
+    font-family: Georgia, serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.15em;
+}
