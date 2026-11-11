@@ -1,7 +1,39 @@
 ﻿@page "/market"
+@inject HttpClient Http
+@using Core
 
 <h3>Marked</h3>
+@if (contentLoaded)
+{
+	@if(activeAds != null)
+	{
+	<p>Antal aktive annoncer: @activeAds.Count</p>
+	}
+	@if (!string.IsNullOrEmpty(contentMsg))
+	{
+		@contentMsg
+	}
+}
+
 
 @code {
+	// List til active annoncer
+	private List<Ad>? activeAds = new List<Ad>();
+	private bool contentLoaded = false;
+	private string contentMsg = "";
 
+	// Henter List med Ads, hvor Ad.Status==Active. Hvis der returneres null laves en ny tom List. 
+	protected override async Task OnInitializedAsync()
+	{
+		activeAds = await Http.GetFromJsonAsync<List<Ad>>("api/ad/active") ?? new List<Ad>();
+		contentLoaded = true;
+		if(activeAds == null)
+		{
+			contentMsg = "Der kunne ikke indlæses nogen annoncer";
+		}
+		else
+		{
+			contentMsg = "";
+		}
+	}
 }
