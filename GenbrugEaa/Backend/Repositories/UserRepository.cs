@@ -1,6 +1,5 @@
 using Core;
 using MongoDB.Driver;
-using Microsoft.Extensions.Configuration;
 
 namespace Backend.Repositories;
 
@@ -22,15 +21,15 @@ public class UserRepository
         _users = database.GetCollection<User>("Users");
     }
 
-    // Henter alle brugere
+    // Hjælpemetode: Henter alle brugere fra MongoDB
     public List<User> GetAllUsers()
     {
         return _users.Find(_ => true).ToList();
     }
 
-    // Henter en bestemt bruger ud fra ID
-    public User? GetUserById(int id)
+    // Hjælpemetode: Henter en bestemt bruger ud fra ID
+    public User? GetUserById(int userId)
     {
-        return _users.Find(user => user.Id == id).FirstOrDefault();
+        return _users.Find(user => user.Id == userId).FirstOrDefault();
     }
 }

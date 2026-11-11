@@ -1,6 +1,5 @@
 using Core;
 using MongoDB.Driver;
-using Microsoft.Extensions.Configuration;
 
 namespace Backend.Repositories;
 
@@ -22,9 +21,57 @@ public class ShoppingListRepository
         _shoppingLists = database.GetCollection<ShoppingList>("ShoppingLists");
     }
 
-    // Henter alle indkøbslister
-    public List<ShoppingList> GetAllShoppingLists()
+    // UC-04, UC-05 og UC-06: Henter en brugers indkøbsliste
+    public ShoppingList? GetUsersShoppingList(int userId)
     {
-        return _shoppingLists.Find(_ => true).ToList();
+        return _shoppingLists.Find(list => list.BuyerId == userId).FirstOrDefault();
+    }
+    
+    // UC-04: Tilføjer en annonce til brugerens indkøbsliste
+    public bool AddToShoppingList(int userId, int adId)
+    {
+        try
+        {
+            // Finder brugerens indkøbsliste
+            var filter = Builders<ShoppingList>.Filter.Eq(list => list.BuyerId, userId);
+
+            // Tilføjer annoncen uden dubletter
+            var update = Builders<ShoppingList>.Update
+                .SetOnInsert(list => list.Id, userId)
+                .AddToSet(list => list.AdIds, adId);
+
+            // Opretter listen, hvis den ikke findes
+            UpdateResult result = _shoppingLists.UpdateOne(
+                filter, update, new UpdateOptions { IsUpsert = true });
+
+            return result.ModifiedCount > 0 || result.UpsertedId != null;
+        }
+        catch (MongoException)
+        {
+            return false;
+        }
+    }
+    
+    // UC-06: Fjerner en annonce fra brugerens indkøbsliste
+    public bool RemoveFromShoppingList(int userId, int adId)
+    {
+        try
+        {
+            // Finder brugerens indkøbsliste
+            var filter = Builders<ShoppingList>.Filter.Eq(list => list.BuyerId, userId);
+
+            // Fjerner annoncens ID fra listen
+            var update = Builders<ShoppingList>.Update
+                .Pull(list => list.AdIds, adId);
+
+            // Gemmer ændringen i MongoDB
+            UpdateResult result = _shoppingLists.UpdateOne(filter, update);
+
+            return result.ModifiedCount > 0;
+        }
+        catch (MongoException)
+        {
+            return false;
+        }
     }
 }
