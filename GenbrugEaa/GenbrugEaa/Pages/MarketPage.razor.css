@@ -11,7 +11,7 @@ h3 {
 /* Kortgrid: tre produkter på stor skærm. */
 .row {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 30px 20px;
     margin: 0 !important;
 }
@@ -60,3 +60,41 @@ h3 {
     font-size: 1.2rem;
     letter-spacing: 0.15em;
 }
+
+/* Annoncens titel */
+.ad-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--ws-text);
+    margin-bottom: 8px;
+    /* Begræns lange titler */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Kategori, pris og oprettelsesdato */
+.ad-details {
+    margin-bottom: 14px;
+}
+
+    .ad-details p {
+        font-size: 0.82rem;
+        color: #77716d;
+        margin: 2px 0;
+        line-height: 1.4;
+    }
+
+/* Knapper ved siden af hinanden */
+.ad-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+    .ad-buttons button {
+        flex: 1;
+        white-space: nowrap;
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }

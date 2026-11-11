@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject LoginService login
+@implements IDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -7,6 +9,12 @@
 
     <main>
         <div class="top-row px-4">
+
+            @if (!string.IsNullOrEmpty(loggedInAs))
+            {
+                <span class="me-3">Logget ind som: @loggedInAs</span>
+            }
+
             <LoginModal />
         </div>
 
@@ -22,3 +30,41 @@
     <span class="dismiss">🗙</span>
 </div>
 
+@code {
+    public string loggedInAs = "";
+
+    /* OnInitializedAsync():
+     * når siden indlæses henter vi user's fornavn
+     * OnUserStateChanged +=: vi tilmelder os LoginService's Event
+     * Når LoginService's OnUserStateChanged udløses, kaldes UpdateLoginStatus
+     */
+    protected override async Task OnInitializedAsync()
+    {
+        loggedInAs = await login.GetFirstName();
+
+        login.OnUserStateChanged += UpdateLoginStatus;
+    }
+
+    /* UpdateLoginStatus():
+     * Henter user's fornavn
+     * StateHasChanged() fortæller Vlazor, at komponenten skal renders igen, så fornavn vises i MainLayout.
+     * async void fordi LoginService's Action-event forventer en metode uden returværdi.
+     */
+    private async void UpdateLoginStatus()
+    {
+        loggedInAs = await login.GetFirstName();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /* Dispose(): 
+     * Metode der bruges til at rydde op, når en komponent ikke længere skal bruges.
+     * Den hænger sammen med @implements IDisposable. 
+     * Det fortæller Blazor, at når komponten fjernes, kaldes Dispose(). 
+     * Hvis ikke det sker, risikerer man at der stadig findes en reference til en komponent, der ikke længere skal modtage besked fra et event.
+     */
+    public void Dispose()
+    {
+        login.OnUserStateChanged -= UpdateLoginStatus;
+    }
+}

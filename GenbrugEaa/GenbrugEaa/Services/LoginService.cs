@@ -19,8 +19,10 @@ namespace GenbrugEaa.Services
     {
         private readonly HttpClient Http; // opretter et felt, som klassen kan bruge
         private readonly ISessionStorageService sessionStorage; // opretter felt, som klassen kan bruge
+        public event Action? OnUserStateChanged; // Opretter et event OnUserStateChanged. Action? er en type, der repræsenterer en etode uden parametre og uden returværdi.
 
-        public LoginService(HttpClient http, ISessionStorageService storage) // klassens constructor
+        // Constructor
+        public LoginService(HttpClient http, ISessionStorageService storage)
         {
             Http = http;
             sessionStorage = storage;
@@ -30,10 +32,11 @@ namespace GenbrugEaa.Services
          * Opretter nyt UserLogin objekt. 
          * Kalder Post API hos UserLoginController
          * Den får response som er et HTTP-svar fra UserLoginController.
-         * Hvis der er success, så læser vi JSON-indholdet og gememr det som loggedInUser og returnerer Id. 
+         * Hvis der er success, så læses JSON-indholdet og det gemmes som loggedInUser og returnerer Id og det første navn i loggedInUser.Name. 
+         * Hvis den ikke finder noget første navn returneres "" 
          * Ellers returneres null.
          */
-        public async Task<int?> UserLogin(string username, string password)
+        public async Task<(int? userId, string firstName)> UserLogin(string username, string password)
         {
             User user = new User { Username = username, Password = password };
 
@@ -42,34 +45,42 @@ namespace GenbrugEaa.Services
             if(response.IsSuccessStatusCode)
             {
                 User? loggedInUser = await response.Content.ReadFromJsonAsync<User>();
-                return loggedInUser?.Id;
+                return (loggedInUser?.Id, loggedInUser?.Name?.Split(' ')[0] ?? "");
             }
             else
             {
-                return null;
+                return (null, "");
             }
         }
 
         /* SetUserSession():
          * Hvis et login er gyldigt skal LoginService.SetUserSession(username) kaldes. 
          * gemmer username og bool i sessionStorage - fortæller hvilken bruger og om bruger er logget ind.
+         * OnUserStateChanged?.Invoke(): Fortæller resten af appen, når brugerstatus ændres. 
+         * "Hvis nogen lytter på dette event, så kald alle metoder, der har tilmeldt sig"
          */
-        public async Task SetUserSession(int userId, string username)
+        public async Task SetUserSession(int userId, string username, string firstName)
         {
             await sessionStorage.SetItemAsync("userId", userId);
             await sessionStorage.SetItemAsync("username", username);
+            await sessionStorage.SetItemAsync("firstName", firstName);
             await sessionStorage.SetItemAsync("isLoggedIn", true);
+            OnUserStateChanged?.Invoke();
         }
 
         /* Logout():
          * Når bruger logger ud skal LoginService.Logout kaldes
-         * Fjerner info om userId, username og om bruger er logget ind fra sessionStorage.
+         * Fjerner info om userId, username, firstName og om bruger er logget ind fra sessionStorage.
+         * OnUserStateChanged?.Invoke(): Fortæller resten af appen, når brugerstatus ændres. 
+         * "Hvis nogen lytter på dette event, så kald alle metoder, der har tilmeldt sig"
          */
         public async Task Logout()
         {
             await sessionStorage.RemoveItemAsync("userId");
             await sessionStorage.RemoveItemAsync("username");
+            await sessionStorage.RemoveItemAsync("firstName");
             await sessionStorage.RemoveItemAsync("isLoggedIn");
+            OnUserStateChanged?.Invoke();
         }
 
         /* IsLoggedIn():
@@ -101,5 +112,13 @@ namespace GenbrugEaa.Services
             return await sessionStorage.GetItemAsync<int>("userId");
         }
 
+        /* GetFirstName():
+         * Returnerer fornavnet på brugeren fra sessionStorage
+         * Hvis det er null er det en tom string
+         */
+        public async Task<string> GetFirstName()
+        {
+            return await sessionStorage.GetItemAsync<string>("firstName") ?? "";
+        }
     }
 }
