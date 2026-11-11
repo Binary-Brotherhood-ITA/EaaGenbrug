@@ -41,6 +41,21 @@ public class PurchaseRequestRepository {
             request.Status = "Pending";
             request.CreatedAt = DateTime.UtcNow;
             request.StatusChangeDate = null;
+            
+            // Finder købsanmodningen med det højeste ID
+            PurchaseRequest? lastRequest = _purchaseRequests.Find(_ => true)
+                .SortByDescending(r => r.Id)
+                .FirstOrDefault();
+
+            // Giver den nye købsanmodning et ID
+            if (lastRequest == null)
+            {
+                request.Id = 1;
+            }
+            else
+            {
+                request.Id = lastRequest.Id + 1;
+            }
 
             // Gemmer købsanmodningen i MongoDB
             _purchaseRequests.InsertOne(request);

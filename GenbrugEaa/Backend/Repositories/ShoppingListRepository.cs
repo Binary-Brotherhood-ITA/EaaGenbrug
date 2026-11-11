@@ -46,8 +46,9 @@ public class ShoppingListRepository
 
             return result.ModifiedCount > 0 || result.UpsertedId != null;
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            Console.WriteLine(ex.Message);
             return false;
         }
     }
