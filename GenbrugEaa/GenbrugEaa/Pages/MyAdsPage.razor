@@ -94,10 +94,10 @@ else if (loggedIn)
                 </InputSelect>
             </div>
 
-            <!-- Valgfrit lokations-ID -->
+            <!-- Valgfrit lokation -->
             <div class="mb-3">
-                <label>Lokation ID (valgfrit)</label>
-                <InputNumber @bind-Value="newAd.LocationId"
+                <label>Lokation (valgfrit)</label>
+                <InputNumber @bind-Value="newAd.Location"
                              class="form-control" />
             </div>
 
@@ -152,11 +152,11 @@ else if (loggedIn)
     // Kategorier som brugeren kan vælge
     private List<string> categories = new()
     {
-        "Books",
-        "Electronics",
-        "Clothing",
-        "Furniture",
-        "Other"
+        "Bøger",
+        "Elektronik",
+        "Tøj",
+        "Møbler",
+        "Andet"
     };
 
     // Mulige tilstande for varen
