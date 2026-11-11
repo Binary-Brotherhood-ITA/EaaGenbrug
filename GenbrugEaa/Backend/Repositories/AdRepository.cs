@@ -86,36 +86,35 @@ public class AdRepository
     //Try forsøger at udføre databaseoperationen, og catch håndterer en eventuel MongoDB-fejl,
     //så Controlleren kan sende en passende besked til brugeren.
 
+    
+        // UC-10: Opdaterer en eksisterende annonce
     public bool UpdateAd(int adId, Ad updatedAd)
-    {
-        try //"try" betyder den skal prøve at udføre denne kode.
         {
-            // Opdaterer annoncens oplysninger
-            UpdateDefinition<Ad> update = Builders<Ad>.Update
-                .Set(ad => ad.Name, updatedAd.Name)
-                .Set(ad => ad.Price, updatedAd.Price)
-                .Set(ad => ad.Category, updatedAd.Category)
-                .Set(ad => ad.Description, updatedAd.Description)
-                .Set(ad => ad.ImgPath, updatedAd.ImgPath)
-                .Set(ad => ad.Condition, updatedAd.Condition)
-                .Set(ad => ad.LocationId, updatedAd.LocationId)
-                .Set(ad => ad.Status, updatedAd.Status);
+            try
+            {
+                // Sørger for at annoncen beholder sit ID
+                updatedAd.Id = adId;
 
-            // Opdaterer kun annoncen, hvis sælgeren matcher
-            UpdateResult result = _ads.UpdateOne(
-                ad => ad.Id == adId &&
-                      ad.SellerId == updatedAd.SellerId,
-                update);
+                // ReplaceOne erstatter en eksisterende annonce med nye oplysninger
+                ReplaceOneResult result = _ads.ReplaceOne(
 
-            // Returnerer true, hvis annoncen blev fundet
-            return result.MatchedCount > 0;
+                    // Finder annoncen, hvor både annonce-ID og sælger-ID matcher
+                    // ad.Id == adId betyder, at vi finder den rigtige annonce
+                    // ad.SellerId == updatedAd.SellerId betyder, at sælger-ID skal være det samme
+                    ad => ad.Id == adId && ad.SellerId == updatedAd.SellerId,
+                    updatedAd); // Det nye annonceobjekt, som erstatter det gamle i MongoDB
+                  
+
+                // Returnerer true, hvis annoncen blev fundet
+                return result.MatchedCount > 0;
+            }
+            catch (MongoException)
+            {
+                // Returnerer false ved databasefejl
+                return false;
+            }
         }
-        catch (MongoException) // catch betyder hvis der opstår fejl så håndterer den her.
-        {
-            // Returnerer false, hvis databasen fejler
-            return false;
-        }
-    }
+    //ReplaceOne() erstatter hele annoncen med den opdaterede annonce.
 
     
 // UC-11: Ændrer annoncens status til Reserved
