@@ -3,7 +3,100 @@
 @using Core
 
 <h3>Mine indkøb</h3>
+<p>@message</p>
+
+@if (ads.Count == 0)
+{
+    <p>Din indkøbsliste er tom.</p>
+}
+else
+{
+    // UC-04: Viser annoncerne fra indkøbslisten
+    @foreach (Ad ad in ads)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>@ad.Name</h5>
+
+                <p>Pris: @ad.Price kr.</p>
+
+                <p>Beskrivelse: @ad.Description</p>
+
+                <p>Stand: @ad.Condition</p>
+                
+                @if (ad.Status == "Active")
+                {
+                    <button class="btn btn-success"
+                            @onclick="() => SendRequest(ad.Id)">
+                        Send købsanmodning
+                    </button>
+                }
+                else
+                {
+                    <p>Varen er ikke tilgængelig for køb.</p>
+                }
+
+            </div>
+        </div>
+    }
+}
+
 
 @code {
+    // UC-04: Brugerens indkøbsliste
+    private ShoppingList? shoppingList;
+    
+    // UC-04: Gemmer annoncerne fra indkøbslisten
+    private List<Ad> ads = new List<Ad>();
 
+    // Midlertidig testbruger
+    private int userId = 2;
+
+    // UC-04: Henter indkøbslisten fra API
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            shoppingList = await Http.GetFromJsonAsync<ShoppingList>(
+                $"api/shoppinglist/{userId}");
+           
+            // UC-04: Henter oplysninger om hver annonce
+            if (shoppingList != null)
+            {
+                foreach (int adId in shoppingList.AdIds)
+                {
+                    Ad? ad = await Http.GetFromJsonAsync<Ad>(
+                        $"api/ad/{adId}");
+
+                    if (ad != null)
+                    {
+                        ads.Add(ad);
+                    }
+                }
+            }
+        }
+        catch (HttpRequestException)
+        {
+            shoppingList = null;
+        }
+    }
+    
+    // UC-05: Sender en købsanmodning
+    private async Task SendRequest(int adId)
+    {
+        HttpResponseMessage response = await Http.PostAsync(
+            $"api/PurchaseRequest/send/{adId}/{userId}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            message = "Købsanmodningen er sendt.";
+        }
+        else
+        {
+            message = "Købsanmodningen kunne ikke sendes.";
+        }
+    }
+    
+    private string message = "";
+    
 }
