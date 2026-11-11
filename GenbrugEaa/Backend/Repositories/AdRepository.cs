@@ -81,6 +81,43 @@ public class AdRepository
         }
     } 
     
+    // UC-10: Opdaterer en eksisterende annonce
+    //Vi bruger try/catch i vores Repository til at håndtere databasefejl.
+    //Try forsøger at udføre databaseoperationen, og catch håndterer en eventuel MongoDB-fejl,
+    //så Controlleren kan sende en passende besked til brugeren.
+
+    public bool UpdateAd(int adId, Ad updatedAd)
+    {
+        try //"try" betyder den skal prøve at udføre denne kode.
+        {
+            // Opdaterer annoncens oplysninger
+            UpdateDefinition<Ad> update = Builders<Ad>.Update
+                .Set(ad => ad.Name, updatedAd.Name)
+                .Set(ad => ad.Price, updatedAd.Price)
+                .Set(ad => ad.Category, updatedAd.Category)
+                .Set(ad => ad.Description, updatedAd.Description)
+                .Set(ad => ad.ImgPath, updatedAd.ImgPath)
+                .Set(ad => ad.Condition, updatedAd.Condition)
+                .Set(ad => ad.LocationId, updatedAd.LocationId)
+                .Set(ad => ad.Status, updatedAd.Status);
+
+            // Opdaterer kun annoncen, hvis sælgeren matcher
+            UpdateResult result = _ads.UpdateOne(
+                ad => ad.Id == adId &&
+                      ad.SellerId == updatedAd.SellerId,
+                update);
+
+            // Returnerer true, hvis annoncen blev fundet
+            return result.MatchedCount > 0;
+        }
+        catch (MongoException) // catch betyder hvis der opstår fejl så håndterer den her.
+        {
+            // Returnerer false, hvis databasen fejler
+            return false;
+        }
+    }
+
+    
 // UC-11: Ændrer annoncens status til Reserved
     public bool SetAdStatus(int adId, string status)
     {
