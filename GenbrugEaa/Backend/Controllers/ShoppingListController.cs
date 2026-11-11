@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Backend.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/shoppinglist")]
 public class ShoppingListController : ControllerBase
 {
     // Reference til vores ShoppingListRepository

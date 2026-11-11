@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Backend.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/ad")]
 public class AdController : ControllerBase
 {
     // Reference til vores AdRepository
