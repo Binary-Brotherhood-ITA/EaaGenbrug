@@ -20,8 +20,10 @@ namespace Backend.Controllers
          * Modtager bool retur, som indikerer om brugerlogin er gyldigt eller ej
          */
         [HttpPost]
-        public IActionResult UserLogin(string username, string password)
+        public IActionResult UserLogin(User user)
         {
+            string username = user.Username;
+            string password = user.Password;
             bool isValid = ulr.UserLogin(username, password);
             if(isValid)
             {

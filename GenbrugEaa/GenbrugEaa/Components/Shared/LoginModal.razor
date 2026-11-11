@@ -2,9 +2,18 @@
 @inject NavigationManager nav
 @inject LoginService login
 
-<button class="btn btn-primary" @onclick="OpenLoginModal">
-    Log ind
-</button>
+@if(!isLoggedIn)
+{
+    <button class="btn btn-primary" @onclick="OpenLoginModal">
+        Log ind
+    </button>
+} else
+{
+    <button class="btn btn-primary" @onclick="OnClickLogout">
+        Log ud
+    </button>
+}
+
 
 @if (showLoginModal)
 {
@@ -44,20 +53,31 @@
     private string username = "";
     private string password = "";
     private string errorText = "";
+    bool isLoggedIn = false;
 
     private bool showLoginModal = false;
 
+    // Kalder LoginService.IsLoggedIn for at tjekke om bruger er logget ind eller ud ifølge sessionStorage.
+    protected override async Task OnInitializedAsync()
+    {
+        isLoggedIn = await login.IsLoggedIn();
+    }
+
+    // Åbner modal vindue
     private void OpenLoginModal()
     {
         showLoginModal = true;
     }
 
+    // Lukker modal vindue
     private void CloseLoginModal()
     {
         showLoginModal = false;
         errorText = "";
     }
 
+    // kalder LoginService.UserLogin for at tjekke oplysninger i backend. 
+    // Hvis true, kaldes LoginService.SetUserSession og modal vinduet lukker. 
     private async Task OnClickLogin()
     {
         bool isValid = await login.UserLogin(username, password);
@@ -65,6 +85,7 @@
         if (isValid)
         {
             await login.SetUserSession(username);
+            isLoggedIn = true;
             CloseLoginModal();
             nav.NavigateTo("/");
         }
@@ -72,5 +93,12 @@
         {
             errorText = "Forkert brugernavn eller password";
         }
+    }
+
+    // kalder LoginService.Logout
+    private async Task OnClickLogout()
+    {
+        await login.Logout();
+        isLoggedIn = false;
     }
 }

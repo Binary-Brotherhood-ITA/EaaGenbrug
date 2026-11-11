@@ -36,6 +36,8 @@ namespace GenbrugEaa.Services
 
             HttpResponseMessage response = await Http.PostAsJsonAsync("api/login", user);
 
+            Console.WriteLine($"Status: {response.StatusCode}");
+
             return response.IsSuccessStatusCode;
         }
 
