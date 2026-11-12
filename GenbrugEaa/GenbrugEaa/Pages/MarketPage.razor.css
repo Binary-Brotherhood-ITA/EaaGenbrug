@@ -79,7 +79,7 @@ h3 {
 }
 
     .ad-details p {
-        font-size: 0.82rem;
+        font-size: 1rem;
         color: #77716d;
         margin: 2px 0;
         line-height: 1.4;
@@ -90,6 +90,7 @@ h3 {
     display: flex;
     gap: 8px;
     align-items: center;
+    margin-bottom: 14px;
 }
 
     .ad-buttons button {

@@ -26,10 +26,21 @@ else
                 
                 @if (ad.Status == "Active")
                 {
+                    
                     <button class="btn btn-success"
+                            disabled="@sentRequests.Contains(ad.Id)"
                             @onclick="() => SendRequest(ad.Id)">
-                        Send købsanmodning
+
+                        @if (sentRequests.Contains(ad.Id))
+                        {
+                            <text>Købsanmodning sendt</text>
+                        }
+                        else
+                        {
+                            <text>Send købsanmodning</text>
+                        }
                     </button>
+
                 }
                 else
                 {
@@ -41,6 +52,118 @@ else
     }
 }
 
+<h3 class="mt-4">Mine købsanmodninger</h3>
+
+@if (requests.Count == 0)
+{
+    <p>Du har ingen købsanmodninger.</p>
+}
+else
+{
+    <h4>Afventende</h4>
+    
+    
+    @if (pendingRequests.Count == 0)
+    {
+        <p>Du har ingen afventende købsanmodninger.</p>
+    }
+    
+    // UC-07: Viser brugerens købsanmodninger
+    @foreach (PurchaseRequest request in pendingRequests)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+
+                @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
+                {
+                    <h5>@ad.Name</h5>
+                    <p>Pris: @ad.Price kr.</p>
+                }
+                else
+                {
+                    <h5>Annonce @request.AdId er slettet</h5>
+                }
+
+                <p>Sælger: @sellerNames.GetValueOrDefault(request.SellerId, "Ukendt sælger")</p>
+
+                @if (request.Status == "Pending")
+                {
+                    <p>Status: Afventer</p>
+                }
+                else if (request.Status == "accepted")
+                {
+                    <p>Status: Accepteret</p>
+                }
+                else if (request.Status == "declined")
+                {
+                    <p>Status: Afvist</p>
+                }
+
+                <p>Sendt den: @request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                
+                @if (request.Status == "accepted" && request.StatusChangeDate.HasValue)
+                {
+                    <p>Accepteret den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                }
+                
+                @if (request.Status == "declined" && request.StatusChangeDate.HasValue)
+                {
+                    <p>Afvist den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                }
+                
+            </div>
+        </div>
+    }
+    
+    <h4 class="mt-4">Afsluttede</h4>
+
+    @if (finishedRequests.Count == 0)
+    {
+        <p>Du har ingen afsluttede købsanmodninger.</p>
+    }
+
+    @foreach (PurchaseRequest request in finishedRequests)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+
+                @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
+                {
+                    <h5>@ad.Name</h5>
+                    <p>Pris: @ad.Price kr.</p>
+                }
+                else
+                {
+                    <h5>Annonce @request.AdId er slettet</h5>
+                }
+
+                <p>Sælger: @sellerNames.GetValueOrDefault(request.SellerId, "Ukendt sælger")</p>
+
+                @if (request.Status == "accepted")
+                {
+                    <p>Status: Accepteret</p>
+                }
+                else if (request.Status == "declined")
+                {
+                    <p>Status: Afvist</p>
+                }
+
+                <p>Sendt den: @request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+
+                @if (request.Status == "accepted" && request.StatusChangeDate.HasValue)
+                {
+                    <p>Accepteret den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                }
+
+                @if (request.Status == "declined" && request.StatusChangeDate.HasValue)
+                {
+                    <p>Afvist den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                }
+
+            </div>
+        </div>
+    }
+}
 
 @code {
     // UC-04: Brugerens indkøbsliste
@@ -48,6 +171,21 @@ else
     
     // UC-04: Gemmer annoncerne fra indkøbslisten
     private List<Ad> ads = new List<Ad>();
+    
+    // UC-07: Gemmer brugerens købsanmodninger
+    private List<PurchaseRequest> requests = new List<PurchaseRequest>();
+    
+    // UC-07: Købsanmodninger der afventer svar
+    private List<PurchaseRequest> pendingRequests = new List<PurchaseRequest>();
+
+// UC-07: Købsanmodninger der er behandlet
+    private List<PurchaseRequest> finishedRequests = new List<PurchaseRequest>();
+
+    // UC-07: Gemmer sælgernes navne
+    private Dictionary<int, string> sellerNames = new Dictionary<int, string>();
+    
+    // UC-07: Gemmer annoncerne fra købsanmodningerne
+    private Dictionary<int, Ad> requestAds = new Dictionary<int, Ad>();
 
     // Midlertidig testbruger
     private int userId = 2;
@@ -79,6 +217,74 @@ else
         {
             shoppingList = null;
         }
+        
+        // UC-07: Henter brugerens købsanmodninger
+        try
+        {
+            requests = await Http.GetFromJsonAsync<List<PurchaseRequest>>(
+                $"api/purchaserequest/buyer/{userId}") ?? new List<PurchaseRequest>();
+        }
+       
+        catch (HttpRequestException ex)
+        {
+            message = "Fejl ved hentning: " + ex.Message;
+            requests = new List<PurchaseRequest>();
+        }
+        
+        // UC-07: Fordeler købsanmodninger efter status
+        foreach (PurchaseRequest request in requests)
+        {
+            if (request.Status == "Pending")
+            {
+                pendingRequests.Add(request);
+            }
+            else if (request.Status == "accepted" || request.Status == "declined")
+            {
+                finishedRequests.Add(request);
+            }
+        }
+        
+        // UC-07: Henter sælgernes navne
+        foreach (PurchaseRequest request in requests)
+        {
+            if (!sellerNames.ContainsKey(request.SellerId))
+            {
+                try
+                {
+                    User? seller = await Http.GetFromJsonAsync<User>(
+                        $"api/user/{request.SellerId}");
+
+                    sellerNames[request.SellerId] = seller?.Name ?? "Ukendt sælger";
+                }
+                catch (HttpRequestException)
+                {
+                    sellerNames[request.SellerId] = "Ukendt sælger";
+                }
+            }
+        }
+        
+        // UC-07: Henter annoncerne til købsanmodningerne
+        foreach (PurchaseRequest request in requests)
+        {
+            if (!requestAds.ContainsKey(request.AdId))
+            {
+                try
+                {
+                    Ad? ad = await Http.GetFromJsonAsync<Ad>(
+                        $"api/ad/{request.AdId}");
+
+                    if (ad != null)
+                    {
+                        requestAds.Add(request.AdId, ad);
+                    }
+                }
+                catch (HttpRequestException)
+                {
+                    // Annoncen kan være slettet
+                }
+            }
+        }
+
     }
     
     // UC-05: Sender en købsanmodning
@@ -87,10 +293,15 @@ else
         HttpResponseMessage response = await Http.PostAsync(
             $"api/PurchaseRequest/send/{adId}/{userId}", null);
 
+       
         if (response.IsSuccessStatusCode)
         {
+            // UC-05: Husker at købsanmodningen er sendt
+            sentRequests.Add(adId);
+
             message = "Købsanmodningen er sendt.";
         }
+
         else
         {
             message = "Købsanmodningen kunne ikke sendes.";
@@ -98,5 +309,8 @@ else
     }
     
     private string message = "";
+    
+    // UC-05: Gemmer ID på annoncer, hvor købsanmodningen er sendt
+    private List<int> sentRequests = new List<int>();
     
 }
