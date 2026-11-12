@@ -14,7 +14,8 @@
 	{
 		<p>Antal aktive annoncer: @activeAds.Count</p>
 
-		<div class="row">
+		<!-- Annonce Grid -->
+		<div class="row"> 
 			@foreach (Ad ad in activeAds)
 			{
 				<div class="col-md-4 mb-3">
@@ -32,14 +33,14 @@
 						<h4 class="ad-title">@ad.Name</h4>
 
 						<div class="ad-details">
-							<p>Kategori: @ad.Category</p>
-							<p>Pris: @ad.Price kr.</p>
-							<p>Oprettet: @ad.CreatedAt.ToString("dd-MM-yyyy")</p>
+							<p><strong>@ad.Price kr</strong>.</p>
+							<p>@ad.Category</p>
 						</div>
 
+						<!-- Knap åbner AdDetailsModal vindue. Sender to aargumenter: Ad-objektet og en bool som fortæller om "Tilføj til indkøb"-knap skal være disabled -->
 						<div class="ad-buttons">
 							<button type="button" class="btn btn-primary"
-									onclick="OpenAdModal(@ad.Id)">
+									@onclick="() => OpenAdModal(ad)">
 								Vis mere
 							</button>
 
@@ -69,6 +70,14 @@
 				</div>
 			}
 		</div>
+
+		<!-- Modal vindue til at vise flere detaljer om annoncen - Vi sender metoden AddToShoppingList med til komponenten -->
+		<AdDetailsModal Ad="selectedAd"
+						ShoppingListContainsAd="shoppingListContainsAd"
+						BuyerIsAdOwner="buyerIsAdOwner"
+						IsOpen="showAdModal"
+						OnClose="CloseAdModal"
+						OnAddToShoppingList="AddToShoppingList" />
 	}
 }
 
@@ -80,7 +89,12 @@
 	private bool contentLoaded = false; // bool til at styre om siden er færdig med at hente indhold fra backend
 	private string contentMsg = ""; // Generel besked i toppen af siden, hvis der ikke er indlæst indhold
 	private string shoppingListMsg = ""; // Besked under knapperne i hver annonce, når bruger har tilføjet til Indkøb
-	private int? selectedAdId = null; // holder styr på hvilken ad der skal have shoppingListMsg
+	private int? selectedAdId = null; // holder styr på hvilken ad der skal tilføjes ShoppingList
+
+	private Ad? selectedAd; // Ad-objekt, som sendes videre til Modal vinduet som parameter
+	private bool shoppingListContainsAd = false; // bool til at fortælle om brugerens shoppingList allerede indeholder selectedAd
+	private bool buyerIsAdOwner = false; // bool til at fortælle, om brugeren selv har oprettet annoncen (userId == Ad.OwnerId?)
+	private bool showAdModal = false; // bool til at styre om AdDetailsModal vinduet er åben eller lukket
 
 	private bool isLoggedIn = false;
 	private int? userId = null;
@@ -136,11 +150,29 @@
 			shoppingListMsg = "Tilføjet til Mine Indkøb";
 			// Henter den opdaterede indkøbsliste, så vores lokale shoppingList bliver opdateret
 			shoppingList = await Http.GetFromJsonAsync<ShoppingList>($"api/shoppinglist/{userId}");
+			// Opdaterer den bool, som modalvinduet benytter til knappers disable-attribut
+			shoppingListContainsAd = shoppingList != null && shoppingList.AdIds.Contains(adId);
 		}
 		// hvis der ikke er 200 OK svar, tilpasses fejlbeskeden
 		else
 		{
 			shoppingListMsg = await response.Content.ReadAsStringAsync();
 		}
+	}
+
+	// Åbner modal med den valgte annonce
+	// metoden beregner selv bools til sine knapper, ud fra det ad-objekt, den modtager
+	private void OpenAdModal(Ad ad)
+	{
+		selectedAd = ad;
+		shoppingListContainsAd = shoppingList != null && shoppingList.AdIds.Contains(ad.Id);
+		buyerIsAdOwner = ad.SellerId == userId;
+		showAdModal = true;
+	}
+
+	// Lukker modal
+	private void CloseAdModal()
+	{
+		showAdModal = false;
 	}
 }

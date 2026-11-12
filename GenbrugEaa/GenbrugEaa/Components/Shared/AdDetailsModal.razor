@@ -1,0 +1,85 @@
+﻿@using Core
+
+@if (IsOpen && Ad != null)
+{
+    <div class="modal-overlay" @onclick="OnClose">
+        <div class="modal-content" @onclick:stopPropagation="true">
+
+            <!-- Navn på Ad -->
+            <h3>@Ad.Name</h3>
+
+            <!-- Viser kun billede, hvis ImgPath ikke er tom -->
+            @if (!string.IsNullOrWhiteSpace(Ad.ImgPath))
+            {
+                <img src="@Ad.ImgPath" alt="@Ad.Name" />
+            }
+
+            <!-- Tilføj og Luk knapper -->
+            <div class="ad-buttons">
+
+                @if (ShoppingListContainsAd)
+                {
+                    <button class="btn btn-primary" disabled>
+                        Allerede tilføjet
+                    </button>
+                }
+                else
+                {
+                    <!-- Kalder Parent-komponentens metode via EventCallback -->
+                    <button type="button" class="btn btn-primary"
+                            disabled="@(BuyerIsAdOwner)"
+                            @onclick="() => OnAddToShoppingList.InvokeAsync(Ad.Id)">
+                        Tilføj til indkøb
+                    </button>
+                }
+
+                <button class="btn btn-secondary" @onclick="OnClose">
+                    Luk
+                </button>
+            </div>
+
+            <!-- Detaljer om Ad -->
+            <p><strong>Kategori:</strong> @Ad.Category</p>
+            <p><strong>Pris:</strong> @Ad.Price kr.</p>
+            <p><strong>Stand:</strong> @Ad.Condition</p>
+            <p><strong>Beskrivelse:</strong> @Ad.Description</p>
+            <p><strong>Kan afhentes på EAAA: </strong> 
+                @if(Ad.LocationId == null)
+                {
+                    <span>Ikke angivet - kontakt sælger</span>
+                }
+                else
+                {
+                    <span>Lokale @Ad.LocationId</span>
+                }
+            </p>
+            <p><strong>Oprettet:</strong> @Ad.CreatedAt.ToString("dd-MM-yyyy")</p>
+        </div>
+    </div>
+}
+
+@code {
+    // parameter til hvilken annonce der skal vises, type: Ad object
+    [Parameter]
+    public Ad? Ad { get; set; }
+
+    // parameter til at styre, om "Tilføj til indkøb"-knap skrive "Allerede tilføjet" og være disabled
+    [Parameter]
+    public bool ShoppingListContainsAd { get; set; }
+
+    // parameter til at styre, om "Tilføj til indkøb"-knap blot skal være disabled (hvis bruger selv ejer annoncen)
+    [Parameter]
+    public bool BuyerIsAdOwner { get; set; }
+
+    // EventCallback parameter - den fortæller parent MarketPage, at brugeren har trykket på knappen og sender int Ad.Id med. 
+    [Parameter]
+    public EventCallback<int> OnAddToShoppingList { get; set; }
+
+    // parameter til at styre om modalvinduet er åbent eller lukket, type: bool
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    // parameter til at lukke modalvinduet. EventCallback: Child komponent skal fortælle sin Parent at brugeren har trykket på Luk
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+}
