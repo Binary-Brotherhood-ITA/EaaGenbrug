@@ -34,7 +34,7 @@ public class ShoppingListRepository
         {
             // Opretter et filter, der finder brugerens indkøbsliste via userId som skal matche ShoppingList.BuyerId,
             // .Filter fortæller, at vi vil oprette et filter
-            // .Eq betyder Equal
+            // .Eq betyder Equal, vi skal matche med brugerens shoppinglist
             // list => list.BuyerId peger på det felt i ShoppingList, vi vil undersøge. 
             var filter = Builders<ShoppingList>.Filter.Eq(list => list.BuyerId, userId);
 
