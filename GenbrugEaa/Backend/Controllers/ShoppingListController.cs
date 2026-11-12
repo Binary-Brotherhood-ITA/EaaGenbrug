@@ -18,7 +18,6 @@ public class ShoppingListController : ControllerBase
     }
     // UC-04: Tilføjer en annonce til brugerens indkøbsliste
     [HttpPost("{userId}/ads/{adId}")]
-   
     public IActionResult AddToShoppingList(int userId, int adId)
     {
         // Kontrollerer om ID'erne er gyldige

@@ -49,6 +49,12 @@
 								Tilføj til indkøb
 							</button>
 
+							<!-- Besked vises kun hvis selectedAdId matcher den aktuelle annonces Id og hvis shoppingListMsg ikke er tom.-->
+							@if (selectedAdId == ad.Id && !string.IsNullOrWhiteSpace(shoppingListMsg))
+							{
+								<p>@shoppingListMsg</p>
+							}
+
 						</div>
 					</div>
 				</div>
@@ -61,8 +67,11 @@
 @code {
 	private List<Ad>? activeAds = new();// List til active annoncer
 	private List<Ad>? filteredAds = new();// List til filter og søgning
-	private bool contentLoaded = false;
-	private string contentMsg = "";
+	private bool contentLoaded = false; // bool til at styre om siden er færdig med at hente indhold fra backend
+	private string contentMsg = ""; // Generel besked i toppen af siden, hvis der ikke er indlæst indhold
+	private string shoppingListMsg = ""; // Besked under knapperne i hver annonce, når bruger har tilføjet til Indkøb
+	private int? selectedAdId = null; // holder styr på hvilken ad der skal have shoppingListMsg
+
 	private bool isLoggedIn = false;
 	private int? userId = null;
 
@@ -94,8 +103,29 @@
 		}
 	}
 
+	// Tilføjer Annoncen til brugers ShoppingList
 	private async Task AddToShoppingList(int adId)
 	{
-		// Kald Controller API AddToShoppingList(userId, AdId)
+		// sætter int på selectedAdId til at styre shoppingListMsg
+		selectedAdId = adId;
+		shoppingListMsg = "";
+
+		//Hvis bruger ID == null, vises fejlbesked
+		if(userId == null)
+		{
+			shoppingListMsg = "ugyldigt bruger-ID";
+			return;
+		}
+		// Kalder ShoppingListController med User.Id og Ad.Id
+		HttpResponseMessage response = await Http.PostAsync($"api/shoppinglist/{userId}/ads/{adId}", null);
+		if(response.IsSuccessStatusCode)
+		{
+			shoppingListMsg = "Tilføjet til Mine Indkøb";
+		}
+		// hvis der ikke er 200 OK svar, tilpasses fejlbeskeden
+		else
+		{
+			shoppingListMsg = await response.Content.ReadAsStringAsync();
+		}
 	}
 }
