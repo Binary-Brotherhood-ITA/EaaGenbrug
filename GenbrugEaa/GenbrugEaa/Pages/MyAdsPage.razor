@@ -1,189 +1,244 @@
 ﻿
 @page "/myads"
 @using Core
+@using GenbrugEaa.Services
 @using System.Net.Http.Json
 @using Microsoft.AspNetCore.Components.Forms
+
 @inject HttpClient Http
+@inject LoginService login
 
 <PageTitle>Mine annoncer</PageTitle>
 
 <h1>Mine annoncer</h1>
 
-<!-- Knapper til at skifte mellem sidens funktioner -->
-<div class="mb-4">
-    <button class="btn btn-primary"
-            @onclick='() => selectedPage = "create"'>
-        Opret annonce
-    </button>
-
-    <button class="btn btn-secondary"
-            @onclick="ShowMyAds">
-        Mine annoncer
-    </button>
-
-    <button class="btn btn-secondary"
-            @onclick='() => selectedPage = "requests"'>
-        Købsanmodninger
-    </button>
-</div>
-
-
-<!-- UC-08: Formular til at oprette en annonce -->
-@if (selectedPage == "create")
+<!-- Viser besked hvis brugeren ikke er logget ind -->
+@if (!isLoaded)
 {
-    <h3>Opret annonce</h3>
-    <p>Udfyld oplysningerne om den vare, du vil sælge.</p>
-
-    <EditForm Model="@newAd"
-              OnSubmit="HandleCreateSubmit"
-              FormName="CreateAdForm">
-
-        <!-- Viser sælgerens ID -->
-        <div class="mb-3">
-            <label>Sælger ID</label>
-            <input class="form-control"
-                   value="@sellerId"
-                   readonly />
-        </div>
-
-        <!-- Annoncens navn -->
-        <div class="mb-3">
-            <label>Navn på vare</label>
-            <InputText @bind-Value="newAd.Name"
-                       class="form-control"
-                       placeholder="F.eks. Studiecomputer" />
-        </div>
-
-        <!-- Annoncens pris -->
-        <div class="mb-3">
-            <label>Pris (kr.)</label>
-            <InputNumber @bind-Value="newAd.Price"
-                         class="form-control" />
-        </div>
-
-        <!-- Vælg kategori -->
-        <div class="mb-3">
-            <label>Kategori</label>
-            <InputSelect @bind-Value="newAd.Category"
-                         class="form-select">
-                <option value="">Vælg kategori</option>
-
-                @foreach (string category in categories)
-                {
-                    <option value="@category">@category</option>
-                }
-            </InputSelect>
-        </div>
-
-        <!-- Beskrivelse af varen -->
-        <div class="mb-3">
-            <label>Beskrivelse</label>
-            <InputTextArea @bind-Value="newAd.Description"
-                           class="form-control"
-                           placeholder="Beskriv varen..." />
-        </div>
-
-        <!-- Billedlink er valgfrit -->
-        <div class="mb-3">
-            <label>Billedlink (valgfrit)</label>
-
-            <InputText @bind-Value="newAd.ImgPath"
-                       class="form-control"
-                       placeholder="Indsæt billedlink, hvis du har et" />
-        </div>
-
-        <!-- Vælg varens stand -->
-        <div class="mb-3">
-            <label>Stand</label>
-            <InputSelect @bind-Value="newAd.Condition"
-                         class="form-select">
-                <option value="">Vælg stand</option>
-
-                @foreach (string condition in conditions)
-                {
-                    <option value="@condition">@condition</option>
-                }
-            </InputSelect>
-        </div>
-
-        <!-- Valgfrit lokations-ID -->
-        <div class="mb-3">
-            <label>LocationId (valgfrit)</label>
-            <InputNumber @bind-Value="newAd.LocationId"
-                         class="form-control" />
-        </div>
-
-        <!-- Vælg annoncens status -->
-        <div class="mb-3">
-            <label>Status</label>
-            <InputSelect @bind-Value="newAd.Status"
-                         class="form-select">
-                <option value="Active">Aktiv</option>
-                <option value="Inactive">Inaktiv</option>
-            </InputSelect>
-        </div>
-
-        <!-- Knapper til oprettelse og nulstilling -->
-        <div class="mb-3">
-            <button type="submit" class="btn btn-primary">
-                Opret annonce
-            </button>
-
-            <button type="button"
-                    class="btn btn-secondary"
-                    @onclick="ResetCreateForm">
-                Ryd felter
-            </button>
-        </div>
-
-    </EditForm>
-
-    <!-- Viser besked efter oprettelse -->
-    @if (!string.IsNullOrWhiteSpace(createStatus))
-    {
-        <p role="status">@createStatus</p>
-    }
+    <p>Indlæser...</p>
 }
-
-
-<!-- Viser sælgerens egne annoncer -->
-@if (selectedPage == "mine")
+else if (!loggedIn)
 {
-    <h3>Mine annoncer</h3>
+    <p>Du skal være logget ind for at administrere annoncer.</p>
+}
+else
+{
+    <!-- Knapper til at skifte mellem sidens funktioner -->
+    <div class="mb-4">
+        <button type="button" class="btn btn-primary"
+                @onclick='() => selectedPage = "create"'>
+            Opret annonce
+        </button>
 
-    @if (!string.IsNullOrWhiteSpace(loadStatus))
-    {
-        <p>@loadStatus</p>
-    }
+        <button type="button" class="btn btn-secondary"
+                @onclick="ShowMyAds">
+            Mine annoncer
+        </button>
 
-    @if (myAds.Count == 0)
-    {
-        <p>Du har ingen annoncer endnu.</p>
-    }
-    else
-    {
-        <!-- Viser hver annonce fra listen -->
-        @foreach (Ad ad in myAds)
-        {
-            <div class="border rounded p-3 mb-3">
-                <h4>@ad.Name</h4>
+        <!-- Åbner og henter sælgerens købsanmodninger -->
+        <button type="button" class="btn btn-secondary"
+                @onclick="ShowRequests">
+            Købsanmodninger
+        </button>
+    </div>
 
-                <p>Pris: @ad.Price kr.</p>
-                <p>Kategori: @ad.Category</p>
-                <p>Stand: @ad.Condition</p>
-                <p>Status: @ad.Status</p>
-                <p>@ad.Description</p>
+
+    <!-- UC-08: Formular til at oprette en annonce -->
+    @if (selectedPage == "create")
+    {
+        <h3>Opret annonce</h3>
+        <p>Udfyld oplysningerne om den vare, du vil sælge.</p>
+
+        <EditForm Model="@newAd"
+                  OnSubmit="HandleCreateSubmit"
+                  FormName="CreateAdForm">
+
+            <!-- Annoncens navn -->
+            <div class="mb-3">
+                <label>Navn på vare</label>
+                <InputText @bind-Value="newAd.Name"
+                           class="form-control"
+                           placeholder="F.eks. Studiecomputer"/>
             </div>
+
+            <!-- Annoncens pris -->
+            <div class="mb-3">
+                <label>Pris (kr.)</label>
+                <InputNumber @bind-Value="newAd.Price"
+                             class="form-control"/>
+            </div>
+
+            <!-- Vælg kategori -->
+            <div class="mb-3">
+                <label>Kategori</label>
+                <InputSelect @bind-Value="newAd.Category"
+                             class="form-select">
+                    <option value="">Vælg kategori</option>
+
+                    @foreach (string category in categories)
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <!-- Beskrivelse af varen -->
+            <div class="mb-3">
+                <label>Beskrivelse</label>
+                <InputTextArea @bind-Value="newAd.Description"
+                               class="form-control"
+                               placeholder="Beskriv varen..."/>
+            </div>
+
+            <!-- Billedlink er valgfrit -->
+            <div class="mb-3">
+                <label>Billedlink (valgfrit)</label>
+                <InputText @bind-Value="newAd.ImgPath"
+                           class="form-control"
+                           placeholder="Indsæt billedlink, hvis du har et"/>
+            </div>
+
+            <!-- Vælg varens stand -->
+            <div class="mb-3">
+                <label>Stand</label>
+                <InputSelect @bind-Value="newAd.Condition"
+                             class="form-select">
+                    <option value="">Vælg stand</option>
+
+                    @foreach (string condition in conditions)
+                    {
+                        <option value="@condition">@condition</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <!-- Valgfrit lokations-ID -->
+            <div class="mb-3">
+                <label>LocationId (valgfrit)</label>
+                <InputNumber @bind-Value="newAd.LocationId"
+                             class="form-control"/>
+            </div>
+
+            <!-- Vælg om annoncen skal være aktiv -->
+            <div class="mb-3">
+                <label>Status</label>
+                <InputSelect @bind-Value="newAd.Status"
+                             class="form-select">
+                    <option value="Active">Aktiv</option>
+                    <option value="Inactive">Inaktiv</option>
+                </InputSelect>
+            </div>
+
+            <!-- Knapper til at oprette eller rydde formularen -->
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">
+                    Opret annonce
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        @onclick="ResetCreateForm">
+                    Ryd felter
+                </button>
+            </div>
+
+        </EditForm>
+
+        <!-- Viser besked efter oprettelse -->
+        @if (!string.IsNullOrWhiteSpace(createStatus))
+        {
+            <p role="status">@createStatus</p>
         }
     }
-}
 
 
-<!-- UC-11: Købsanmodninger laves senere -->
-@if (selectedPage == "requests")
-{
-    <h3>Købsanmodninger</h3>
-    <p>Her skal sælgerens købsanmodninger vises.</p>
+    <!-- Viser sælgerens egne annoncer -->
+    @if (selectedPage == "mine")
+    {
+        <h3>Mine annoncer</h3>
+
+        <!-- Viser fejl hvis annoncer ikke kunne hentes -->
+        @if (!string.IsNullOrWhiteSpace(loadStatus))
+        {
+            <p>@loadStatus</p>
+        }
+
+        <!-- Viser besked hvis sælgeren ingen annoncer har -->
+        @if (myAds.Count == 0 && string.IsNullOrWhiteSpace(loadStatus))
+        {
+            <p>Du har ingen annoncer endnu.</p>
+        }
+        else
+        {
+            <!-- Viser annoncerne fra databasen -->
+            @foreach (Ad ad in myAds)
+            {
+                <div class="border rounded p-3 mb-3">
+                    <h4>@ad.Name</h4>
+
+                    <p>Pris: @ad.Price kr.</p>
+                    <p>Kategori: @ad.Category</p>
+                    <p>Stand: @ad.Condition</p>
+                    <p>Status: @ad.Status</p>
+                    <p>@ad.Description</p>
+
+                    <!-- Viser billedet hvis der findes et link -->
+                    @if (!string.IsNullOrWhiteSpace(ad.ImgPath))
+                    {
+                        <img src="@ad.ImgPath"
+                             alt="@ad.Name"
+                             style="max-width:200px;"/>
+                    }
+                </div>
+            }
+        }
+    }
+
+
+
+    <!-- UC-11: Viser sælgerens købsanmodninger -->
+    @if (selectedPage == "requests")
+    {
+        <h3>Købsanmodninger</h3>
+
+        <!-- Viser beskeder efter accept eller afvisning -->
+        @if (!string.IsNullOrWhiteSpace(requestStatus))
+        {
+            <p role="status">@requestStatus</p>
+        }
+
+        <!-- Viser besked hvis der ikke er anmodninger -->
+        @if (requests.Count == 0)
+        {
+            <p>Du har ingen afventende købsanmodninger.</p>
+        }
+        else
+        {
+            <!-- Viser hver købsanmodning -->
+            @foreach (PurchaseRequest request in requests)
+            {
+                <div class="border rounded p-3 mb-3">
+
+                    <p>Anmodning ID: @request.Id</p>
+                    <p>Annonce ID: @request.AdId</p>
+                    <p>Status: @request.Status</p>
+
+                    <!-- Accepterer købsanmodningen -->
+                    <button type="button" class="btn btn-success"
+                            @onclick="() => AcceptRequest(request.Id)">
+                        Accepter
+                    </button>
+
+                    <!-- Afviser købsanmodningen -->
+                    <button type="button" class="btn btn-danger"
+                            @onclick="() => RejectRequest(request.Id)">
+                        Afvis
+                    </button>
+
+                </div>
+            }
+        }
+    }
 }
 
 
@@ -192,15 +247,17 @@
     // Bestemmer hvilken del af siden der vises
     private string selectedPage = "create";
 
-    // Midlertidig testbruger(skal nok ændres senere når der kommer login!)
-    private int sellerId = 1;
+    // Viser først siden når login er kontrolleret
+    private bool isLoaded = false;
 
-    // Opretter et nyt annonceobjekt med standardsværdier
-    private Ad newAd = new Ad
-    {
-        SellerId = 1, // Midlertidig testbruger
-        Status = "Active"
-    };
+    // Fortæller om brugeren er logget ind
+    private bool loggedIn = false;
+
+    // ID på den indloggede sælger
+    private int sellerId = 0;
+
+    // Objekt til oprettelse af en ny annonce
+    private Ad newAd = new Ad { Status = "Active" };
 
     // Liste med sælgerens egne annoncer
     private List<Ad> myAds = new();
@@ -230,9 +287,62 @@
     };
 
 
-    // UC-08: Opretter en ny annonce
+    // =====================================
+    // LOGIN
+    // =====================================
+
+    // Henter loginoplysninger når siden åbnes
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Kører kun første gang siden vises
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // Kontrollerer om brugeren er logget ind
+        loggedIn = await login.IsLoggedIn();
+
+        if (loggedIn)
+        {
+            // Henter ID på den indloggede bruger
+            sellerId = await login.GetUserId();
+        }
+
+        // Login er nu kontrolleret
+        isLoaded = true;
+
+        // Opdaterer siden
+        StateHasChanged();
+    }
+
+
+    // =====================================
+    // UC-08: OPRET ANNONCE
+    // =====================================
+
+    // Opretter en ny annonce
     private async Task HandleCreateSubmit()
     {
+        // Kontrollerer om brugeren stadig er logget ind
+        loggedIn = await login.IsLoggedIn();
+
+        if (!loggedIn)
+        {
+            createStatus = "Du skal være logget ind.";
+            return;
+        }
+
+        // Henter ID på den indloggede bruger
+        sellerId = await login.GetUserId();
+
+        // Tjekker om sælger-ID er gyldigt
+        if (sellerId <= 0)
+        {
+            createStatus = "Sælger-ID er ugyldigt.";
+            return;
+        }
+
         // Tjekker obligatoriske felter
         if (string.IsNullOrWhiteSpace(newAd.Name) ||
             string.IsNullOrWhiteSpace(newAd.Category) ||
@@ -250,10 +360,10 @@
             return;
         }
 
-        // Tilknytter sælgeren til annoncen
+        // Tilknytter den indloggede sælger til annoncen
         newAd.SellerId = sellerId;
-        
-        // Hvis billedfeltet er tomt, gemmes det som en tom tekst
+
+        // Billedlink er valgfrit
         if (string.IsNullOrWhiteSpace(newAd.ImgPath))
         {
             newAd.ImgPath = "";
@@ -268,23 +378,25 @@
             // Tjekker om annoncen blev gemt
             if (response.IsSuccessStatusCode)
             {
+                // Rydder formularen efter oprettelse
                 ResetCreateForm();
 
                 createStatus = "Annoncen er oprettet!";
             }
             else
             {
-                // Viser fejlbesked fra backend
+                // Henter fejlbeskeden fra backend
                 string error =
                     await response.Content.ReadAsStringAsync();
 
-                createStatus = "Fejl: " + error;
+                createStatus = "Fejl " +
+                               (int)response.StatusCode +
+                               ": " + error;
             }
         }
         catch (HttpRequestException ex)
         {
-            // Viser den rigtige fejl fra HTTP-kaldet hvis backend ikke kan kontaktes.
-            // (ex.message viser den præcise fejl!)
+            // Viser fejl hvis backend ikke kan kontaktes
             createStatus = "Forbindelsesfejl: " + ex.Message;
         }
     }
@@ -300,24 +412,44 @@
             Status = "Active"
         };
 
+        // Fjerner tidligere beskeder
         createStatus = "";
     }
 
 
-    // Viser sælgerens annoncer
+    // =====================================
+    // MINE ANNONCER
+    // =====================================
+
+    // Viser annoncer fra den indloggede sælger
     private async Task ShowMyAds()
     {
+        // Kontrollerer om brugeren er logget ind
+        loggedIn = await login.IsLoggedIn();
+
+        if (!loggedIn)
+        {
+            loadStatus = "Du skal være logget ind.";
+            myAds.Clear();
+            selectedPage = "mine";
+            return;
+        }
+
+        // Henter den indloggede brugers ID
+        sellerId = await login.GetUserId();
+
         // Skifter til Mine annoncer
         selectedPage = "mine";
 
-        // Henter annoncerne fra backend
+        // Henter annoncer fra backend
         await LoadMyAds();
     }
 
 
-    // GET: Henter alle annoncer fra sælgeren
+    // GET: Henter sælgerens annoncer fra databasen
     private async Task LoadMyAds()
     {
+        // Fjerner gamle fejl og annoncer
         loadStatus = "";
         myAds = new List<Ad>();
 
@@ -328,13 +460,135 @@
                 await Http.GetFromJsonAsync<List<Ad>>(
                     "api/ad/seller/" + sellerId);
 
-            // Gemmer de hentede annoncer i listen
+            // Gemmer annoncerne i listen
             myAds = ads ?? new List<Ad>();
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
             // Viser fejl hvis backend ikke kan kontaktes
-            loadStatus = "Kunne ikke hente annoncer.";
+            loadStatus = "Kunne ikke hente annoncer: " + ex.Message;
         }
     }
+    
+    // =====================================
+    // UC-11: KØBSANMODNINGER
+    // =====================================
+
+    // Liste med afventende købsanmodninger
+    private List<PurchaseRequest> requests = new();
+
+    // Besked til brugeren
+    private string requestStatus = "";
+
+
+    // Viser sælgerens købsanmodninger
+    private async Task ShowRequests()
+    {
+        // Kontrollerer om brugeren er logget ind
+        loggedIn = await login.IsLoggedIn();
+
+        if (!loggedIn)
+        {
+            requests.Clear();
+            requestStatus = "Du skal være logget ind.";
+            return;
+        }
+
+        // Henter den indloggede sælgers ID
+        sellerId = await login.GetUserId();
+
+        // Skifter til købsanmodninger
+        selectedPage = "requests";
+
+        // Henter købsanmodningerne
+        await LoadRequests();
+    }
+
+
+    // Henter afventende købsanmodninger fra backend
+    private async Task LoadRequests()
+    {
+        requestStatus = "";
+        requests.Clear();
+
+        try
+        {
+            // GET kalder PurchaseRequestController
+            List<PurchaseRequest>? result =
+                await Http.GetFromJsonAsync<List<PurchaseRequest>>(
+                    "api/purchaserequest/seller/" +
+                    sellerId + "/pending");
+
+            // Gemmer købsanmodningerne i listen
+            requests = result ?? new List<PurchaseRequest>();
+        }
+        catch (HttpRequestException ex)
+        {
+            requestStatus = "Kunne ikke hente anmodninger: " + ex.Message;
+        }
+    }
+
+
+    // UC-11: Accepterer en købsanmodning
+    private async Task AcceptRequest(int requestId)
+    {
+        try
+        {
+            // PUT sender accept til controlleren
+            HttpResponseMessage response = await Http.PutAsync(
+                "api/purchaserequest/" + requestId +
+                "/accept?sellerId=" + sellerId, null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Opdaterer listen efter accept
+                await LoadRequests();
+
+                requestStatus = "Købsanmodningen er accepteret.";
+            }
+            else
+            {
+                // Viser fejl fra backend
+                string error = await response.Content.ReadAsStringAsync();
+                requestStatus = "Fejl: " + error;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            requestStatus = "Forbindelsesfejl: " + ex.Message;
+        }
+    }
+
+
+    // UC-11: Afviser en købsanmodning
+    private async Task RejectRequest(int requestId)
+    {
+        try
+        {
+            // PUT sender afvisning til controlleren
+            HttpResponseMessage response = await Http.PutAsync(
+                "api/purchaserequest/" + requestId +
+                "/reject?sellerId=" + sellerId, null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Opdaterer listen efter afvisning
+                await LoadRequests();
+
+                requestStatus = "Købsanmodningen er afvist.";
+            }
+            else
+            {
+                // Viser fejl fra backend
+                string error = await response.Content.ReadAsStringAsync();
+                requestStatus = "Fejl: " + error;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            requestStatus = "Forbindelsesfejl: " + ex.Message;
+        }
+    }
+
 }
+
