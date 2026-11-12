@@ -1,4 +1,5 @@
 ﻿@using GenbrugEaa.Services
+@using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager nav
 @inject LoginService login
 
@@ -23,11 +24,13 @@
             <h4>Log ind</h4>
 
             <InputText @bind-Value="username"
+                       @onkeydown="HandleKeyDown"
                        class="form-control mb-2"
                        placeholder="Indtast brugernavn" />
 
             <InputText type="password"
                        @bind-Value="password"
+                       @onkeydown="HandleKeyDown"
                        class="form-control mb-2"
                        placeholder="Indtast password" />
 
@@ -76,13 +79,22 @@
         errorText = "";
     }
 
+    // Binder sig til @onkeydown HandleKeyDown på input felterne
+    // hvis der trykkes Enter kaldes OnClickLogin() metoden
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await OnClickLogin();
+        }
+    }
+
     /* OnClickLogin():
      * Kalder LoginService.UserLogin for at finde match med username && password i backend. 
      * Hvis der findes et match, returneres User.UserId og det første ord i User.Name
      * Hvis true, kaldes LoginService.SetUserSession og modal vinduet lukker. 
      * Nødt til at skrive userId.Value, fordi LoginService forventer en int -- .Value beregner heltalsværdien int-værdien. 
-     */
-    
+     */    
     private async Task OnClickLogin()
     {
         (int? userId, string firstName) = await login.UserLogin(username, password);
