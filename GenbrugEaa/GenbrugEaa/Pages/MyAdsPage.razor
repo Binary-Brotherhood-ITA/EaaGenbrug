@@ -228,8 +228,26 @@
         "Brugt",
         "Slidt"
     };
+    
+    // Henter oplysninger når siden åbnes
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
 
+        // Midlertidig testbruger
+        sellerId = 1;  
 
+        // Tilknytter sælgeren til annoncen
+        newAd.SellerId = (int)sellerId;
+
+        // Viser formularen
+        StateHasChanged();
+
+        await Task.CompletedTask;
+    }
     // UC-08: Opretter en ny annonce
     private async Task HandleCreateSubmit()
     {

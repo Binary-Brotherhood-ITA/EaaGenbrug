@@ -82,6 +82,22 @@ public class PurchaseRequestController : ControllerBase
         // Returnerer en succesbesked
         return Ok("Din købsanmodning er sendt.");
     }
+    
+    // UC-07: Henter køberens købsanmodninger
+    [HttpGet("buyer/{buyerId}")]
+    public IActionResult GetRequestsByBuyer(int buyerId)
+    {
+        if (buyerId <= 0)
+        {
+            return BadRequest("Ugyldigt køber-ID.");
+        }
+
+        List<PurchaseRequest> requests =
+            _purchaseRequestRepository.GetRequestsByBuyer(buyerId);
+
+        return Ok(requests);
+    }
+
 
     // UC-11: Henter sælgerens afventende købsanmodninger
     [HttpGet("seller/{sellerId}/pending")]
