@@ -43,19 +43,28 @@
 								Vis mere
 							</button>
 
-							<button type="button" class="btn btn-primary"
-									disabled="@(ad.SellerId == userId)"
-									@onclick="() => AddToShoppingList(ad.Id)">
-								Tilføj til indkøb
-							</button>
-
-							<!-- Besked vises kun hvis selectedAdId matcher den aktuelle annonces Id og hvis shoppingListMsg ikke er tom.-->
-							@if (selectedAdId == ad.Id && !string.IsNullOrWhiteSpace(shoppingListMsg))
+							<!-- Hvis vi har en shoppingList og ad.Id allerede findes i ShoppingList.AdIds -->
+							@if (shoppingList != null && shoppingList.AdIds.Contains(ad.Id))
 							{
-								<p>@shoppingListMsg</p>
+								<button class="btn btn-primary" disabled>
+									Allerede tilføjet
+								</button>
 							}
-
+							else
+							{
+								<button type="button" class="btn btn-primary"
+								disabled="@(ad.SellerId == userId)"
+								@onclick="() => AddToShoppingList(ad.Id)">
+									Tilføj til indkøb
+								</button>
+							}
 						</div>
+
+						<!-- Besked vises kun hvis selectedAdId matcher den aktuelle annonces Id og hvis shoppingListMsg ikke er tom.-->
+						@if (selectedAdId == ad.Id && !string.IsNullOrWhiteSpace(shoppingListMsg))
+						{
+							<p>@shoppingListMsg</p>
+						}
 					</div>
 				</div>
 			}
@@ -67,6 +76,7 @@
 @code {
 	private List<Ad>? activeAds = new();// List til active annoncer
 	private List<Ad>? filteredAds = new();// List til filter og søgning
+	private ShoppingList? shoppingList = new(); // List til brugerens ShoppingList(Indkøb)
 	private bool contentLoaded = false; // bool til at styre om siden er færdig med at hente indhold fra backend
 	private string contentMsg = ""; // Generel besked i toppen af siden, hvis der ikke er indlæst indhold
 	private string shoppingListMsg = ""; // Besked under knapperne i hver annonce, når bruger har tilføjet til Indkøb
@@ -89,6 +99,9 @@
 
 		// Finder User.Id
 		userId = await login.GetUserId();
+
+		// Henter brugerens indkøbsliste
+		shoppingList = await Http.GetFromJsonAsync<ShoppingList>($"api/shoppinglist/{userId}");
 
 		// Henter Ads fra backend
 		activeAds = await Http.GetFromJsonAsync<List<Ad>>("api/ad/active") ?? new List<Ad>();
@@ -116,11 +129,13 @@
 			shoppingListMsg = "ugyldigt bruger-ID";
 			return;
 		}
-		// Kalder ShoppingListController med User.Id og Ad.Id
+		// Kalder ShoppingListController med User.Id og Ad.Id for at tilføje Ad til ShoppingList
 		HttpResponseMessage response = await Http.PostAsync($"api/shoppinglist/{userId}/ads/{adId}", null);
 		if(response.IsSuccessStatusCode)
 		{
 			shoppingListMsg = "Tilføjet til Mine Indkøb";
+			// Henter den opdaterede indkøbsliste, så vores lokale shoppingList bliver opdateret
+			shoppingList = await Http.GetFromJsonAsync<ShoppingList>($"api/shoppinglist/{userId}");
 		}
 		// hvis der ikke er 200 OK svar, tilpasses fejlbeskeden
 		else

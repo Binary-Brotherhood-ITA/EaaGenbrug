@@ -32,10 +32,15 @@ public class ShoppingListRepository
     {
         try
         {
-            // Finder brugerens indkøbsliste
+            // Opretter et filter, der finder brugerens indkøbsliste via userId som skal matche ShoppingList.BuyerId,
+            // .Filter fortæller, at vi vil oprette et filter
+            // .Eq betyder Equal
+            // list => list.BuyerId peger på det felt i ShoppingList, vi vil undersøge. 
             var filter = Builders<ShoppingList>.Filter.Eq(list => list.BuyerId, userId);
 
             // Tilføjer annoncen uden dubletter
+            // .SetOnInsert: Hvis MongoDB opretter nyt document(ny shoppinglist), sættes ShoppingList.Id til userId
+            // .AddToSet: Tilføjer adId til shoppinglist.AdIds (array). Det er lidt ligesom .Add(), men med indbygget beskyttelse mod dubletter.
             var update = Builders<ShoppingList>.Update
                 .SetOnInsert(list => list.Id, userId)
                 .AddToSet(list => list.AdIds, adId);
@@ -44,7 +49,9 @@ public class ShoppingListRepository
             UpdateResult result = _shoppingLists.UpdateOne(
                 filter, update, new UpdateOptions { IsUpsert = true });
 
-            return result.ModifiedCount > 0 || result.UpsertedId != null;
+            _shoppingLists.UpdateOne(filter, update, new UpdateOptions { IsUpsert = true });
+
+            return true;
         }
         catch (MongoException ex)
         {
