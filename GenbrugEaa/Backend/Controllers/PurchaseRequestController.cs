@@ -97,8 +97,40 @@ public class PurchaseRequestController : ControllerBase
 
         return Ok(requests);
     }
+    
+    
+    // UC-07: Køberen kan annullere en afventende købsanmodning
+    [HttpPut("{requestId}/cancel/{buyerId}")]
+    public IActionResult CancelRequest(int requestId, int buyerId)
+    {
+        PurchaseRequest? request = _purchaseRequestRepository.GetRequest(requestId);
 
+        if (request == null)
+        {
+            return NotFound("Købsanmodningen findes ikke.");
+        }
 
+        if (request.BuyerId != buyerId)
+        {
+            return Forbid();
+        }
+
+        if (request.Status != "Pending")
+        {
+            return BadRequest("Kun afventende købsanmodninger kan annulleres.");
+        }
+        
+        bool success = _purchaseRequestRepository.SetRequestStatus(requestId, "cancelled");
+
+        if (success == false)
+        {
+            return BadRequest("Købsanmodningen kunne ikke annulleres.");
+        }
+
+        return Ok("Købsanmodningen er annulleret.");
+
+    }
+    
     // UC-11: Henter sælgerens afventende købsanmodninger
     [HttpGet("seller/{sellerId}/pending")]
     public IActionResult GetPendingForSeller(int sellerId)

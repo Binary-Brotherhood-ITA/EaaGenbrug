@@ -96,14 +96,14 @@ public class PurchaseRequestRepository {
 
 
     // UC-11: Opdaterer status på en købsanmodning
-    public bool SetRequestStatus(int requestId, string status) {
-       
-        // Kun accepter eller afvis er tilladt her
-        if (status != "accepted" && status != "declined") {
-            
+    public bool SetRequestStatus(int requestId, string status) { 
+        
+        // UC-07 og UC-11: Tillader accept, afvisning og annullering
+        if (status != "accepted" && status != "declined" && status != "cancelled")
+        {
             return false;
         }
-
+        
         // Finder den anmodning, som skal opdateres
         PurchaseRequest? request = GetRequest(requestId);
 

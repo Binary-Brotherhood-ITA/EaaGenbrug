@@ -2,170 +2,223 @@
 @inject HttpClient Http
 @using Core
 
-<h3>Mine indkøb</h3>
+<div class="mb-4">
+    <button class="btn btn-primary me-2"
+            @onclick="() => showRequests = false">
+        Mine indkøb
+    </button>
+
+    <button class="btn btn-primary"
+            @onclick="() => showRequests = true">
+        Sendte anmodninger
+    </button>
+</div>
+
 <p>@message</p>
 
-@if (ads.Count == 0)
+@if (!showRequests)
 {
-    <p>Din indkøbsliste er tom.</p>
-}
-else
-{
-    // UC-04: Viser annoncerne fra indkøbslisten
-    @foreach (Ad ad in ads)
+
+    <h3>Mine indkøb</h3>
+    
+    @if (ads.Count == 0)
     {
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5>@ad.Name</h5>
+        <p>Din indkøbsliste er tom.</p>
+    }
+    else
+    {
+        // UC-04: Viser annoncerne fra indkøbslisten
+        @foreach (Ad ad in ads)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>@ad.Name</h5>
 
-                <p>Pris: @ad.Price kr.</p>
+                    <p>Pris: @ad.Price kr.</p>
 
-                <p>Beskrivelse: @ad.Description</p>
+                    <p>Beskrivelse: @ad.Description</p>
 
-                <p>Stand: @ad.Condition</p>
-                
-                @if (ad.Status == "Active")
-                {
-                    
-                    <button class="btn btn-success"
-                            disabled="@sentRequests.Contains(ad.Id)"
-                            @onclick="() => SendRequest(ad.Id)">
+                    <p>Stand: @ad.Condition</p>
 
-                        @if (sentRequests.Contains(ad.Id))
+                    @if (ad.Status == "Active")
+                    {
+
+                        <button class="btn btn-success"
+                                disabled="@sentRequests.Contains(ad.Id)"
+                                @onclick="() => SendRequest(ad.Id)">
+
+                            @if (sentRequests.Contains(ad.Id))
+                            {
+                                <text>Købsanmodning sendt</text>
+                            }
+                            else
+                            {
+                                <text>Send købsanmodning</text>
+                            }
+                        </button>
+
+                    }
+                    else
+                    {
+                        <p>Varen er ikke tilgængelig for køb.</p>
+                    }
+                    <button class="btn btn-danger mt-2"
+                            @onclick="() => RemoveFromShoppingList(ad.Id)">
+                        Fjern fra indkøbsliste
+                    </button>
+
+
+                </div>
+            </div>
+        }
+    }
+}
+
+@if (showRequests)
+    {
+        <h3 class="mt-4">Mine købsanmodninger</h3>
+
+        @if (requests.Count == 0)
+        {
+            <p>Du har ingen købsanmodninger.</p>
+        }
+        else
+        {
+            <h4>Afventende</h4>
+
+
+            @if (pendingRequests.Count == 0)
+            {
+                <p>Du har ingen afventende købsanmodninger.</p>
+            }
+
+            // UC-07: Viser brugerens købsanmodninger
+            @foreach (PurchaseRequest request in pendingRequests)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+
+                        @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
                         {
-                            <text>Købsanmodning sendt</text>
+                            <h5>@ad.Name</h5>
+                            <p>Pris: @ad.Price kr.</p>
                         }
                         else
                         {
-                            <text>Send købsanmodning</text>
+                            <h5>Annonce @request.AdId er slettet</h5>
                         }
-                    </button>
 
-                }
-                else
-                {
-                    <p>Varen er ikke tilgængelig for køb.</p>
-                }
+                        <p>Sælger: @sellerNames.GetValueOrDefault(request.SellerId, "Ukendt sælger")</p>
 
-            </div>
-        </div>
+                        @if (request.Status == "Pending")
+                        {
+                            <p>Status: Afventer</p>
+                        }
+                        else if (request.Status == "accepted")
+                        {
+                            <p>Status: Accepteret</p>
+                        }
+                        else if (request.Status == "declined")
+                        {
+                            <p>Status: Afvist</p>
+                        }
+
+                        <p>Sendt den: @request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                        
+                        <button class="btn btn-danger mt-2"
+                                @onclick="() => CancelRequest(request)">
+                            Annuller købsanmodning
+                        </button>
+
+
+                        @if (request.Status == "accepted" && request.StatusChangeDate.HasValue)
+                        {
+                            <p>Accepteret
+                                den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                        }
+
+                        @if (request.Status == "declined" && request.StatusChangeDate.HasValue)
+                        {
+                            <p>Afvist
+                                den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                        }
+                        
+                        @if (request.Status == "cancelled" && request.StatusChangeDate.HasValue)
+                        {
+                            <p>Annulleret den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                        }
+                        
+                    </div>
+                </div>
+            }
+
+            <h4 class="mt-4">Afsluttede</h4>
+
+            @if (finishedRequests.Count == 0)
+            {
+                <p>Du har ingen afsluttede købsanmodninger.</p>
+            }
+
+            @foreach (PurchaseRequest request in finishedRequests)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+
+                        @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
+                        {
+                            <h5>@ad.Name</h5>
+                            <p>Pris: @ad.Price kr.</p>
+                        }
+                        else
+                        {
+                            <h5>Annonce @request.AdId er slettet</h5>
+                        }
+
+                        <p>Sælger: @sellerNames.GetValueOrDefault(request.SellerId, "Ukendt sælger")</p>
+
+                        @if (request.Status == "accepted")
+                        {
+                            <p>Status: Accepteret</p>
+                        }
+                        else if (request.Status == "declined")
+                        {
+                            <p>Status: Afvist</p>
+                        }
+                        else if (request.Status == "cancelled")
+                        {
+                            <p>Status: Annulleret</p>
+                        }
+                        
+                        <p>Sendt den: @request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+
+                        @if (request.Status == "accepted" && request.StatusChangeDate.HasValue)
+                        {
+                            <p>Accepteret den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                        }
+
+                        @if (request.Status == "declined" && request.StatusChangeDate.HasValue)
+                        {
+                            <p>Afvist den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                        }
+
+                        @if (request.Status == "cancelled" && request.StatusChangeDate.HasValue)
+                        {
+                            <p>Annulleret den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
+                        }
+
+                    </div>
+                </div>
+            }
+            
+        }
+
     }
-}
-
-<h3 class="mt-4">Mine købsanmodninger</h3>
-
-@if (requests.Count == 0)
-{
-    <p>Du har ingen købsanmodninger.</p>
-}
-else
-{
-    <h4>Afventende</h4>
-    
-    
-    @if (pendingRequests.Count == 0)
-    {
-        <p>Du har ingen afventende købsanmodninger.</p>
-    }
-    
-    // UC-07: Viser brugerens købsanmodninger
-    @foreach (PurchaseRequest request in pendingRequests)
-    {
-        <div class="card mb-3">
-            <div class="card-body">
-
-                @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
-                {
-                    <h5>@ad.Name</h5>
-                    <p>Pris: @ad.Price kr.</p>
-                }
-                else
-                {
-                    <h5>Annonce @request.AdId er slettet</h5>
-                }
-
-                <p>Sælger: @sellerNames.GetValueOrDefault(request.SellerId, "Ukendt sælger")</p>
-
-                @if (request.Status == "Pending")
-                {
-                    <p>Status: Afventer</p>
-                }
-                else if (request.Status == "accepted")
-                {
-                    <p>Status: Accepteret</p>
-                }
-                else if (request.Status == "declined")
-                {
-                    <p>Status: Afvist</p>
-                }
-
-                <p>Sendt den: @request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
-                
-                @if (request.Status == "accepted" && request.StatusChangeDate.HasValue)
-                {
-                    <p>Accepteret den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
-                }
-                
-                @if (request.Status == "declined" && request.StatusChangeDate.HasValue)
-                {
-                    <p>Afvist den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
-                }
-                
-            </div>
-        </div>
-    }
-    
-    <h4 class="mt-4">Afsluttede</h4>
-
-    @if (finishedRequests.Count == 0)
-    {
-        <p>Du har ingen afsluttede købsanmodninger.</p>
-    }
-
-    @foreach (PurchaseRequest request in finishedRequests)
-    {
-        <div class="card mb-3">
-            <div class="card-body">
-
-                @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
-                {
-                    <h5>@ad.Name</h5>
-                    <p>Pris: @ad.Price kr.</p>
-                }
-                else
-                {
-                    <h5>Annonce @request.AdId er slettet</h5>
-                }
-
-                <p>Sælger: @sellerNames.GetValueOrDefault(request.SellerId, "Ukendt sælger")</p>
-
-                @if (request.Status == "accepted")
-                {
-                    <p>Status: Accepteret</p>
-                }
-                else if (request.Status == "declined")
-                {
-                    <p>Status: Afvist</p>
-                }
-
-                <p>Sendt den: @request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
-
-                @if (request.Status == "accepted" && request.StatusChangeDate.HasValue)
-                {
-                    <p>Accepteret den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
-                }
-
-                @if (request.Status == "declined" && request.StatusChangeDate.HasValue)
-                {
-                    <p>Afvist den: @request.StatusChangeDate.Value.ToLocalTime().ToString("dd.MM.yyyy 'kl.' HH:mm")</p>
-                }
-
-            </div>
-        </div>
-    }
-}
 
 @code {
+    
+    // Styrer om vi viser indkøbslisten eller købsanmodningerne
+    private bool showRequests = false;
+
     // UC-04: Brugerens indkøbsliste
     private ShoppingList? shoppingList;
     
@@ -178,7 +231,7 @@ else
     // UC-07: Købsanmodninger der afventer svar
     private List<PurchaseRequest> pendingRequests = new List<PurchaseRequest>();
 
-// UC-07: Købsanmodninger der er behandlet
+    // UC-07: Købsanmodninger der er behandlet
     private List<PurchaseRequest> finishedRequests = new List<PurchaseRequest>();
 
     // UC-07: Gemmer sælgernes navne
@@ -238,7 +291,10 @@ else
             {
                 pendingRequests.Add(request);
             }
-            else if (request.Status == "accepted" || request.Status == "declined")
+            
+            else if (request.Status == "accepted" ||
+                     request.Status == "declined" ||
+                     request.Status == "cancelled")
             {
                 finishedRequests.Add(request);
             }
@@ -313,4 +369,43 @@ else
     // UC-05: Gemmer ID på annoncer, hvor købsanmodningen er sendt
     private List<int> sentRequests = new List<int>();
     
+    // UC-06: Fjerner en annonce fra indkøbslisten
+    private async Task RemoveFromShoppingList(int adId)
+    {
+        HttpResponseMessage response = await Http.DeleteAsync(
+            $"api/shoppinglist/{userId}/ads/{adId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            ads.RemoveAll(ad => ad.Id == adId);
+            message = "Annoncen er fjernet fra indkøbslisten.";
+        }
+        else
+        {
+            message = "Annoncen kunne ikke fjernes.";
+        }
+    }
+    
+    // UC-07: Annullerer en afventende købsanmodning
+    private async Task CancelRequest(PurchaseRequest request)
+    {
+        HttpResponseMessage response = await Http.PutAsync(
+            $"api/purchaserequest/{request.Id}/cancel/{userId}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            request.Status = "cancelled";
+            pendingRequests.Remove(request);
+            finishedRequests.Add(request);
+
+            message = "Købsanmodningen er annulleret.";
+        }
+        else
+        {
+            message = "Købsanmodningen kunne ikke annulleres.";
+        }
+    }
+
+
 }
+
