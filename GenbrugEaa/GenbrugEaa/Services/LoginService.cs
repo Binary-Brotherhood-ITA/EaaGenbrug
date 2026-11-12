@@ -13,6 +13,34 @@ using System.Net.Http.Json;
 * * Efter injektion kan sider kalde login.UserLogin(username, password) og gøre brug af metoden her for at tjekke et logins gyldighed hos DB. 
 */
 
+/* LOGIC FLOW:
+* * * LoginService: Til at autentificere brugerens login. Kontakter DB. 
+* 
+* * * Når Peter logger ind:
+* Peter indtaster brugernavn og password i LoginModal.
+* LoginModal kalder login.UserLogin(username, password).
+* LoginService sender oplysningerne til API'et.
+* Backend finder Peter i databasen og returnerer hans brugeroplysninger.
+* LoginService returnerer Peters userId og firstName til LoginModal.
+* LoginModal kalder SetUserSession().
+* LoginService gemmer userId, username, firstName og isLoggedIn i sessionStorage.
+* LoginService kalder OnUserStateChanged?.Invoke().
+* MainLayout har allerede tilmeldt sig eventen med +=, så den får besked om ændringen.
+* MainLayout kalder sin egen metode UpdateLoginStatus().
+* UpdateLoginStatus() henter Peters fornavn fra sessionStorage.
+* StateHasChanged() fortæller Blazor, at komponenten skal tegnes igen, så Peter nu vises i topbjælken.
+* 
+* * * Når Peter logger ud:
+* Peter klikker på Log ud i LoginModal.
+* LoginModal kalder login.Logout().
+* LoginService fjerner Peters oplysninger fra sessionStorage.
+* LoginService kalder igen OnUserStateChanged?.Invoke().
+* MainLayout får besked om ændringen.
+* MainLayout forsøger at hente fornavnet, men sessionStorage er nu tom.
+* loggedInAs bliver en tom string.
+* StateHasChanged() opdaterer visningen, og teksten med Peters navn forsvinder.
+ */
+
 namespace GenbrugEaa.Services
 {
     public class LoginService

@@ -39,17 +39,21 @@ public class ShoppingListController : ControllerBase
         return Ok("Annoncen er tilføjet til indkøbslisten.");
     }
     
-    // UC-04, UC-05 og UC-06: Henter brugerens indkøbsliste
+    // UC-02, UC-04, UC-05 og UC-06: Henter brugerens indkøbsliste
     [HttpGet("{userId}")]
     public IActionResult GetUsersShoppingList(int userId)
     {
         // Henter indkøbslisten gennem repository
         ShoppingList? shoppingList = _shoppingListRepository.GetUsersShoppingList(userId);
 
-        // Tjekker om indkøbslisten findes
+        // Hvis indkøbslisten ikke findes: Returner en tom List med BuyerId==userId og AdIds en tom Liste af int.
         if (shoppingList == null)
         {
-            return NotFound("Indkøbslisten findes ikke.");
+            shoppingList = new ShoppingList
+            {
+                BuyerId = userId,
+                AdIds = new List<int>()
+            };
         }
 
         // Returnerer indkøbslisten
