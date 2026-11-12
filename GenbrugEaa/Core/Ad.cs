@@ -27,7 +27,8 @@ public class Ad
     public string Description { get; set; } 
 
     // Sti til varens billede
-    public string ImgPath { get; set; } 
+    // (?) Billedlink er valgfrit
+    public string? ImgPath { get; set; }
 
     // Varens stand
     public string Condition { get; set; } 

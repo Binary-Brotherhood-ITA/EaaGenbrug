@@ -1,131 +1,142 @@
-﻿@page "/myads"
+﻿
+@page "/myads"
 @using Core
-@using Blazored.SessionStorage
 @using System.Net.Http.Json
-@inject NavigationManager nav
-@inject ISessionStorageService sessionStorage
+@using Microsoft.AspNetCore.Components.Forms
 @inject HttpClient Http
 
-<PageTitle>Opret annonce</PageTitle>
+<PageTitle>Mine annoncer</PageTitle>
 
-<h1>Opret annonce</h1>
-<p>Udfyld oplysningerne om den vare, du vil sælge.</p>
+<h1>Mine annoncer</h1>
 
-@if (!isLoaded)
+<!-- Knapper til at skifte mellem sidens funktioner -->
+<div class="mb-4">
+    <button class="btn btn-primary"
+            @onclick='() => selectedPage = "create"'>
+        Opret annonce
+    </button>
+
+    <button class="btn btn-secondary"
+            @onclick="ShowMyAds">
+        Mine annoncer
+    </button>
+
+    <button class="btn btn-secondary"
+            @onclick='() => selectedPage = "requests"'>
+        Købsanmodninger
+    </button>
+</div>
+
+
+<!-- UC-08: Formular til at oprette en annonce -->
+@if (selectedPage == "create")
 {
-    <p>Indlæser...</p>
-}
-else if (loggedIn)
-{
-    <!-- Formular til oprettelse af en ny annonce -->
-    <section class="create-ad-panel">
+    <h3>Opret annonce</h3>
+    <p>Udfyld oplysningerne om den vare, du vil sælge.</p>
 
-        <EditForm Model="@newAd"
-                  OnValidSubmit="HandleCreateSubmit"
-                  FormName="CreateAdForm">
+    <EditForm Model="@newAd"
+              OnSubmit="HandleCreateSubmit"
+              FormName="CreateAdForm">
 
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+        <!-- Viser sælgerens ID -->
+        <div class="mb-3">
+            <label>Sælger ID</label>
+            <input class="form-control"
+                   value="@sellerId"
+                   readonly />
+        </div>
 
-            <!-- Viser ID på den indloggede sælger -->
-            <div class="mb-3">
-                <label>Sælger ID</label>
-                <input class="form-control"
-                       value="@sellerId"
-                       readonly />
-            </div>
+        <!-- Annoncens navn -->
+        <div class="mb-3">
+            <label>Navn på vare</label>
+            <InputText @bind-Value="newAd.Name"
+                       class="form-control"
+                       placeholder="F.eks. Studiecomputer" />
+        </div>
 
-            <!-- Annoncens navn -->
-            <div class="mb-3">
-                <label>Navn på vare</label>
-                <InputText @bind-Value="newAd.Name"
+        <!-- Annoncens pris -->
+        <div class="mb-3">
+            <label>Pris (kr.)</label>
+            <InputNumber @bind-Value="newAd.Price"
+                         class="form-control" />
+        </div>
+
+        <!-- Vælg kategori -->
+        <div class="mb-3">
+            <label>Kategori</label>
+            <InputSelect @bind-Value="newAd.Category"
+                         class="form-select">
+                <option value="">Vælg kategori</option>
+
+                @foreach (string category in categories)
+                {
+                    <option value="@category">@category</option>
+                }
+            </InputSelect>
+        </div>
+
+        <!-- Beskrivelse af varen -->
+        <div class="mb-3">
+            <label>Beskrivelse</label>
+            <InputTextArea @bind-Value="newAd.Description"
                            class="form-control"
-                           placeholder="F.eks. Studiecomputer" />
-            </div>
+                           placeholder="Beskriv varen..." />
+        </div>
 
-            <!-- Annoncens pris -->
-            <div class="mb-3">
-                <label>Pris (kr.)</label>
-                <InputNumber @bind-Value="newAd.Price"
-                             class="form-control" />
-            </div>
+        <!-- Billedlink er valgfrit -->
+        <div class="mb-3">
+            <label>Billedlink (valgfrit)</label>
 
-            <!-- Vælg kategori -->
-            <div class="mb-3">
-                <label>Kategori</label>
-                <InputSelect @bind-Value="newAd.Category"
-                             class="form-select">
-                    <option value="">Vælg kategori</option>
+            <InputText @bind-Value="newAd.ImgPath"
+                       class="form-control"
+                       placeholder="Indsæt billedlink, hvis du har et" />
+        </div>
 
-                    @foreach (string category in categories)
-                    {
-                        <option value="@category">@category</option>
-                    }
-                </InputSelect>
-            </div>
+        <!-- Vælg varens stand -->
+        <div class="mb-3">
+            <label>Stand</label>
+            <InputSelect @bind-Value="newAd.Condition"
+                         class="form-select">
+                <option value="">Vælg stand</option>
 
-            <!-- Beskrivelse af varen -->
-            <div class="mb-3">
-                <label>Beskrivelse</label>
-                <InputTextArea @bind-Value="newAd.Description"
-                               class="form-control"
-                               placeholder="Beskriv varen..." />
-            </div>
+                @foreach (string condition in conditions)
+                {
+                    <option value="@condition">@condition</option>
+                }
+            </InputSelect>
+        </div>
 
-            <!-- Billedsti eller billedlink -->
-            <div class="mb-3">
-                <label>Billedlink</label>
-                <InputText @bind-Value="newAd.ImgPath"
-                           class="form-control"
-                           placeholder="https://example.com/image.jpg" />
-            </div>
+        <!-- Valgfrit lokations-ID -->
+        <div class="mb-3">
+            <label>LocationId (valgfrit)</label>
+            <InputNumber @bind-Value="newAd.LocationId"
+                         class="form-control" />
+        </div>
 
-            <!-- Vælg varens stand -->
-            <div class="mb-3">
-                <label>Stand</label>
-                <InputSelect @bind-Value="newAd.Condition"
-                             class="form-select">
-                    <option value="">Vælg stand</option>
+        <!-- Vælg annoncens status -->
+        <div class="mb-3">
+            <label>Status</label>
+            <InputSelect @bind-Value="newAd.Status"
+                         class="form-select">
+                <option value="Active">Aktiv</option>
+                <option value="Inactive">Inaktiv</option>
+            </InputSelect>
+        </div>
 
-                    @foreach (string condition in conditions)
-                    {
-                        <option value="@condition">@condition</option>
-                    }
-                </InputSelect>
-            </div>
+        <!-- Knapper til oprettelse og nulstilling -->
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">
+                Opret annonce
+            </button>
 
-            <!-- Valgfrit lokationId -->
-            <div class="mb-3">
-                <label>LokationId (valgfrit)</label>
-                <InputNumber @bind-Value="newAd.LocationId"
-                             class="form-control" />
-            </div>
+            <button type="button"
+                    class="btn btn-secondary"
+                    @onclick="ResetCreateForm">
+                Ryd felter
+            </button>
+        </div>
 
-            <!-- Vælg om annoncen skal være aktiv -->
-            <div class="mb-3">
-                <label>Status</label>
-                <InputSelect @bind-Value="newAd.Status"
-                             class="form-select">
-                    <option value="Active">Aktiv</option>
-                    <option value="Inactive">Inaktiv</option>
-                </InputSelect>
-            </div>
-
-            <!-- Knapper til at gemme eller rydde formularen -->
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary">
-                    Opret annonce
-                </button>
-
-                <button type="button"
-                        class="btn btn-secondary"
-                        @onclick="ResetCreateForm">
-                    Ryd felter
-                </button>
-            </div>
-
-        </EditForm>
-    </section>
+    </EditForm>
 
     <!-- Viser besked efter oprettelse -->
     @if (!string.IsNullOrWhiteSpace(createStatus))
@@ -134,22 +145,71 @@ else if (loggedIn)
     }
 }
 
+
+<!-- Viser sælgerens egne annoncer -->
+@if (selectedPage == "mine")
+{
+    <h3>Mine annoncer</h3>
+
+    @if (!string.IsNullOrWhiteSpace(loadStatus))
+    {
+        <p>@loadStatus</p>
+    }
+
+    @if (myAds.Count == 0)
+    {
+        <p>Du har ingen annoncer endnu.</p>
+    }
+    else
+    {
+        <!-- Viser hver annonce fra listen -->
+        @foreach (Ad ad in myAds)
+        {
+            <div class="border rounded p-3 mb-3">
+                <h4>@ad.Name</h4>
+
+                <p>Pris: @ad.Price kr.</p>
+                <p>Kategori: @ad.Category</p>
+                <p>Stand: @ad.Condition</p>
+                <p>Status: @ad.Status</p>
+                <p>@ad.Description</p>
+            </div>
+        }
+    }
+}
+
+
+<!-- UC-11: Købsanmodninger laves senere -->
+@if (selectedPage == "requests")
+{
+    <h3>Købsanmodninger</h3>
+    <p>Her skal sælgerens købsanmodninger vises.</p>
+}
+
+
 @code {
 
-    // Holder siden skjult indtil login er kontrolleret
-    private bool isLoaded = false;
-    private bool loggedIn = false;
+    // Bestemmer hvilken del af siden der vises
+    private string selectedPage = "create";
 
-    // ID på den indloggede sælger
-    private int? sellerId = null;
+    // Midlertidig testbruger(skal nok ændres senere når der kommer login!)
+    private int sellerId = 1;
 
-    // Objektet som formularen udfylder
-    private Ad newAd = new Ad { Status = "Active" };
+    // Opretter et nyt annonceobjekt med standardsværdier
+    private Ad newAd = new Ad
+    {
+        SellerId = 1, // Midlertidig testbruger
+        Status = "Active"
+    };
 
-    // Besked efter oprettelse
+    // Liste med sælgerens egne annoncer
+    private List<Ad> myAds = new();
+
+    // Beskeder til brugeren
     private string createStatus = "";
+    private string loadStatus = "";
 
-    // Kategorier som brugeren kan vælge
+    // Kategorier til formularen
     private List<string> categories = new()
     {
         "Bøger",
@@ -159,53 +219,21 @@ else if (loggedIn)
         "Andet"
     };
 
-    // Mulige tilstande for varen
+    // Varens mulige stande
     private List<string> conditions = new()
     {
-        "Som ny",         // Helt ny og ubrugt
-        "Rigtig god",     // Meget god stand
-        "Få brugsspor",   // God stand med få brugsspor
-        "Brugt",          // Brugt med tydelige brugsspor
-        "Slidt",          // Meget tydelige brugsspor
+        "Som ny",
+        "Rigtig god",
+        "Få brugsspor",
+        "Brugt",
+        "Slidt"
     };
-
-
-    
-    // Henter oplysninger når siden åbnes
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        // Midlertidig testbruger
-        sellerId = 1;
-        loggedIn = true;
-
-        // Tilknytter sælgeren til annoncen
-        newAd.SellerId = (int)sellerId;
-
-        // Viser formularen
-        isLoaded = true;
-        StateHasChanged();
-
-        await Task.CompletedTask;
-    }
-    
 
 
     // UC-08: Opretter en ny annonce
     private async Task HandleCreateSubmit()
     {
-        // Tjekker om sælger-ID findes
-        if (sellerId == null || sellerId <= 0)
-        {
-            createStatus = "Sælger-ID mangler.";
-            return;
-        }
-
-        // Tjekker obligatoriske oplysninger
+        // Tjekker obligatoriske felter
         if (string.IsNullOrWhiteSpace(newAd.Name) ||
             string.IsNullOrWhiteSpace(newAd.Category) ||
             string.IsNullOrWhiteSpace(newAd.Description) ||
@@ -215,7 +243,7 @@ else if (loggedIn)
             return;
         }
 
-        // Prisen må ikke være negativ
+        // Tjekker om prisen er gyldig
         if (newAd.Price < 0)
         {
             createStatus = "Prisen må ikke være negativ.";
@@ -223,7 +251,13 @@ else if (loggedIn)
         }
 
         // Tilknytter sælgeren til annoncen
-        newAd.SellerId = (int)sellerId;
+        newAd.SellerId = sellerId;
+        
+        // Hvis billedfeltet er tomt, gemmes det som en tom tekst
+        if (string.IsNullOrWhiteSpace(newAd.ImgPath))
+        {
+            newAd.ImgPath = "";
+        }
 
         try
         {
@@ -231,7 +265,7 @@ else if (loggedIn)
             HttpResponseMessage response =
                 await Http.PostAsJsonAsync("api/ad", newAd);
 
-            // Tjekker om annoncen blev oprettet
+            // Tjekker om annoncen blev gemt
             if (response.IsSuccessStatusCode)
             {
                 ResetCreateForm();
@@ -240,29 +274,67 @@ else if (loggedIn)
             }
             else
             {
-                createStatus = "Annoncen kunne ikke oprettes.";
+                // Viser fejlbesked fra backend
+                string error =
+                    await response.Content.ReadAsStringAsync();
+
+                createStatus = "Fejl: " + error;
             }
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
-            // Viser fejl hvis forbindelsen til backend fejler
-            createStatus = "Kunne ikke forbinde til serveren.";
+            // Viser den rigtige fejl fra HTTP-kaldet hvis backend ikke kan kontaktes.
+            // (ex.message viser den præcise fejl!)
+            createStatus = "Forbindelsesfejl: " + ex.Message;
         }
     }
 
 
-    // Nulstiller formularen efter oprettelse
+    // Nulstiller formularen
     private void ResetCreateForm()
     {
         // Opretter et nyt tomt annonceobjekt
-        newAd = new Ad { Status = "Active" };
-
-        // Beholder den indloggede sælger
-        if (sellerId != null)
+        newAd = new Ad
         {
-            newAd.SellerId = (int)sellerId;
-        }
+            SellerId = sellerId,
+            Status = "Active"
+        };
 
         createStatus = "";
+    }
+
+
+    // Viser sælgerens annoncer
+    private async Task ShowMyAds()
+    {
+        // Skifter til Mine annoncer
+        selectedPage = "mine";
+
+        // Henter annoncerne fra backend
+        await LoadMyAds();
+    }
+
+
+    // GET: Henter alle annoncer fra sælgeren
+    private async Task LoadMyAds()
+    {
+        loadStatus = "";
+        myAds = new List<Ad>();
+
+        try
+        {
+            // GET kalder AdController
+            List<Ad>? ads =
+                await Http.GetFromJsonAsync<List<Ad>>(
+                    "api/ad/seller/" + sellerId);
+
+            // Gemmer de hentede annoncer i listen
+            myAds = ads ?? new List<Ad>();
+        }
+        catch (HttpRequestException)
+        {
+            // Viser fejl hvis backend ikke kan kontaktes
+            loadStatus = "Kunne ikke hente annoncer.";
+        }
     }
 }

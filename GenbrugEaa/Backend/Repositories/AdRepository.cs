@@ -45,23 +45,48 @@ public class AdRepository
         return _ads.Find(ad => ad.SellerId == sellerId).ToList();
     }
     
-// UC-08: Opretter og gemmer en ny annonce
+
+    
+    // UC-08: Opretter og gemmer en ny annonce
     public bool CreateAd(Ad ad)
     {
+        // Try betyder, at programmet forsøger at udføre koden.
+        // Hvis koden lykkes, fortsætter programmet normalt.
         try
         {
+            // Henter alle eksisterende annoncer
+            List<Ad> ads = GetAllAds();
+
+            // Starter med ID 1
+            int nextId = 1;
+
+            // Finder det højeste ID
+            foreach (Ad existingAd in ads)
+            {
+                if (existingAd.Id >= nextId)
+                {
+                    nextId = existingAd.Id + 1;
+                }
+            }
+
+            // Giver den nye annonce et unikt ID
+            ad.Id = nextId;
+
             // Gemmer annoncen i MongoDB
             _ads.InsertOne(ad);
 
             return true;
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
-            // Returnerer false hvis databasen fejler
+            // Viser databasefejlen i Rider
+            Console.WriteLine("MongoDB fejl: " + ex.Message);
+
             return false;
         }
-    } 
-    
+    }
+
+
 // UC-09: Sletter en annonce, hvis den tilhører sælgeren
     public bool DeleteAd(int adId, int sellerId)
     {
@@ -74,6 +99,8 @@ public class AdRepository
             // True hvis annoncen blev slettet
             return result.DeletedCount > 0;
         }
+        // Catch fanger en fejl, hvis MongoDB-operationen mislykkes.
+        // Programmet håndterer fejlen i stedet for at lade den fortsætte.
         catch (MongoException)
         {
             // Returnerer false hvis databasen fejler

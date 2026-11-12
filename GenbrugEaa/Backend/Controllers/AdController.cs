@@ -63,15 +63,20 @@ public class AdController : ControllerBase
     }
 
 
+    
     // UC-08: Opretter en ny annonce
     [HttpPost]
     public IActionResult CreateAd([FromBody] Ad ad)
     {
-        // Tjekker om annoncen har en sælger
+        // Tjekker om sælger-ID er gyldigt
         if (ad.SellerId <= 0)
         {
             return BadRequest("Sælger-ID er ugyldigt.");
         }
+
+        // Sætter datoen, når annoncen oprettes
+        // UtcNow henter det nuværende tidspunkt i utc.
+        ad.CreatedAt = DateTime.UtcNow;
 
         // Gemmer annoncen gennem repository
         bool success = _adRepository.CreateAd(ad);
@@ -85,6 +90,7 @@ public class AdController : ControllerBase
         // Returnerer en succesbesked
         return Ok("Annoncen er oprettet.");
     }
+
     
     // UC-09: Sletter en annonce
     [HttpDelete("{adId}")]
