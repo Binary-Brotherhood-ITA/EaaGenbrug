@@ -1,5 +1,6 @@
 ﻿@page "/shoppinglist"
 @inject HttpClient Http
+@inject LoginService login
 @using Core
 
 <div class="mb-4">
@@ -242,11 +243,22 @@
     private Dictionary<int, Ad> requestAds = new Dictionary<int, Ad>();
 
     // Midlertidig testbruger
-    private int userId = 2;
+    private int userId;
 
     // UC-04: Henter indkøbslisten fra API
     protected override async Task OnInitializedAsync()
     {
+        // UC-01: Henter den indloggede bruger
+        bool isLoggedIn = await login.IsLoggedIn();
+
+        if (!isLoggedIn)
+        {
+            message = "Du skal logge ind for at se dine indkøb.";
+            return;
+        }
+
+        userId = await login.GetUserId();
+
         try
         {
             shoppingList = await Http.GetFromJsonAsync<ShoppingList>(
