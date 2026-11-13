@@ -21,7 +21,7 @@
 @if (!showRequests)
 {
 
-    <h3>Mine indkøb</h3>
+    <h3 class="pageTitle">Mine indkøb</h3>
     
     @if (ads.Count == 0)
     {
@@ -253,7 +253,7 @@
 
         if (!isLoggedIn)
         {
-            message = "Du skal logge ind for at se dine indkøb.";
+            message = "Log ind for at se dine indkøb.";
             return;
         }
 

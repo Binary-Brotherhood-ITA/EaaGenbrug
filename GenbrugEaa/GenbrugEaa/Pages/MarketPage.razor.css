@@ -1,12 +1,5 @@
 /* CSS for MarketPage component */
-h3 {
-    margin: 0 0 32px;
-    padding-bottom: 22px;
-    border-bottom: 1px solid var(--ws-border);
-    color: var(--ws-text);
-    font-size: clamp(2.4rem, 4.5vw, 4.2rem);
-    line-height: 1.1;
-}
+
 
 /* Kortgrid: tre produkter på stor skærm. */
 .row {

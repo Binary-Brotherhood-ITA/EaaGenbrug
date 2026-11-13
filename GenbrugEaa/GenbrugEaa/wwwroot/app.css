@@ -24,6 +24,17 @@ h1:focus {
     outline: none;
 }
 
+.pageTitle {
+    margin: 0 0 2px;
+    padding-bottom: 0;
+    border-bottom: 1px solid var(--ws-border);
+    color: var(--ws-text);
+    font-family: Georgia, serif;
+    font-weight: 550;
+    font-size: clamp(2.4rem, 4.5vw, 4.2rem);
+    line-height: 1.1;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

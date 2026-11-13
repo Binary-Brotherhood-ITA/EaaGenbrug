@@ -3,7 +3,7 @@
 @inject LoginService login
 @using Core
 
-<h3>Marked</h3>
+<h3 class="pageTitle">Marked</h3>
 @if (contentLoaded)
 {
 	if(!string.IsNullOrEmpty(contentMsg))
@@ -12,7 +12,7 @@
 	}
 	if(isLoggedIn && activeAds != null)
 	{
-		<p>Viser @GetFilteredAds().Count ud af @activeAds.Count aktive annoncer:</p>
+		<p>Viser @GetFilteredAds().Count ud af @activeAds.Count aktive annoncer</p>
 
 		<!-- SØGNING -->
 		<!-- Søgefelt: Brugeren kan søge efter tøjtype, fx dress, hoodie eller jacket. -->
@@ -283,15 +283,11 @@
 		// Sorterer annoncerne efter pris.
 		if (selectedSort == "PriceLowHigh")
 		{
-		    filteredAds = filteredAds
-		        .OrderBy(ad => ad.Price)
-		        .ToList();
+		    filteredAds = filteredAds.OrderBy(ad => ad.Price).ToList();
 		}
 		else if (selectedSort == "PriceHighLow")
 		{
-		    filteredAds = filteredAds
-		        .OrderByDescending(ad => ad.Price)
-		        .ToList();
+		    filteredAds = filteredAds.OrderByDescending(ad => ad.Price).ToList();
 		}
 		return filteredAds;
 	}
