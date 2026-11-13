@@ -291,14 +291,8 @@ else
     // =====================================
 
     // Henter loginoplysninger når siden åbnes
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        // Kører kun første gang siden vises
-        if (!firstRender)
-        {
-            return;
-        }
-
         // Kontrollerer om brugeren er logget ind
         loggedIn = await login.IsLoggedIn();
 
@@ -310,11 +304,7 @@ else
 
         // Login er nu kontrolleret
         isLoaded = true;
-
-        // Opdaterer siden
-        StateHasChanged();
     }
-
 
     // =====================================
     // UC-08: OPRET ANNONCE
@@ -443,8 +433,7 @@ else
         // Henter annoncer fra backend
         await LoadMyAds();
     }
-
-
+    
     // GET: Henter sælgerens annoncer fra databasen
     private async Task LoadMyAds()
     {
@@ -478,8 +467,7 @@ else
 
     // Besked til brugeren
     private string requestStatus = "";
-
-
+    
     // Viser sælgerens købsanmodninger
     private async Task ShowRequests()
     {
