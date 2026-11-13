@@ -23,11 +23,16 @@
                         Allerede tilføjet
                     </button>
                 }
+                else if(BuyerIsAdOwner)
+                {
+					<button type="button" class="btn btn-primary" disabled>
+						Du ejer annoncen
+					</button>
+                }
                 else
                 {
                     <!-- Kalder Parent-komponentens metode via EventCallback -->
                     <button type="button" class="btn btn-primary"
-                            disabled="@(BuyerIsAdOwner)"
                             @onclick="() => OnAddToShoppingList.InvokeAsync(Ad.Id)">
                         Tilføj til indkøb
                     </button>

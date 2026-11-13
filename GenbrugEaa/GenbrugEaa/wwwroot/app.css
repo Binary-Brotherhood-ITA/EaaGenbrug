@@ -35,6 +35,14 @@ h1:focus {
     line-height: 1.1;
 }
 
+.pageSubTitle {
+    font-family: Georgia, serif;
+    font-size: 1.7rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--ws-text);
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

@@ -7,14 +7,14 @@
 
 /* Velkomstsektion */
 .welcome-section {
-    padding: 30px 0 35px;
+    padding: 80px 0 80px;
 }
 
 .welcome-section h2 {
     font-family: Georgia, serif;
     font-size: clamp(1.8rem, 3vw, 2.5rem);
     font-weight: 500;
-    margin-bottom: 12px;
+    margin-bottom: 0;
     color: var(--ws-text);
 }
 
@@ -25,13 +25,9 @@
 
 .welcome-subtitle {
     font-size: 1.15rem;
-    font-weight: 600;
+    font-style: italic;
 }
 
-.login-reminder {
-    margin-top: 22px;
-    font-weight: 600;
-}
 
 /* Menukort */
 .home-menu {
@@ -62,13 +58,7 @@
     margin-bottom: 15px;
 }
 
-.home-card h4 {
-    font-family: Georgia, serif;
-    font-size: 1.7rem;
-    font-weight: 500;
-    margin-bottom: 12px;
-    color: var(--ws-text);
-}
+
 
 .home-card-subtitle {
     font-weight: 700;

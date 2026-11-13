@@ -3,82 +3,81 @@
 @inject LoginService login
 @using Core
 
-<div class="mb-4">
-    <button class="btn @(showRequests ? "btn-outline-primary" : "btn-primary") me-2"
-            @onclick="() => showRequests = false">
-        Mine indkøb
-    </button>
-
-    <button class="btn @(showRequests ? "btn-primary" : "btn-outline-primary")"
-            @onclick="() => showRequests = true">
-        Sendte anmodninger
-    </button>
-</div>
-
+<h3 class="pageTitle">Mine indkøb</h3>
 
 <p>@message</p>
-
-@if (!showRequests)
+@if(isLoggedIn)
 {
-
-    <h3 class="pageTitle">Mine indkøb</h3>
+    <div class="mb-4">
+        <button class="btn @(showRequests ? "btn-outline-primary" : "btn-primary") me-2"
+                @onclick="() => showRequests = false">
+            Mine indkøb
+        </button>
     
-    @if (ads.Count == 0)
+        <button class="btn @(showRequests ? "btn-primary" : "btn-outline-primary")"
+                @onclick="() => showRequests = true">
+            Mine købsanmodninger
+        </button>
+    </div>
+
+    @if (!showRequests)
     {
-        <p>Din indkøbsliste er tom.</p>
-    }
-    else
-    {
-        // UC-04: Viser annoncerne fra indkøbslisten
-        @foreach (Ad ad in ads)
+        <h4 class="pageSubTitle">Min indkøbsliste</h4>
+        @if (ads.Count == 0)
         {
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5>@ad.Name</h5>
-
-                    <p>Pris: @ad.Price kr.</p>
-
-                    <p>Beskrivelse: @ad.Description</p>
-
-                    <p>Stand: @ad.Condition</p>
-
-                    @if (ad.Status == "Active")
-                    {
-
-                        <button class="btn btn-success"
-                                disabled="@sentRequests.Contains(ad.Id)"
-                                @onclick="() => SendRequest(ad.Id)">
-
-                            @if (sentRequests.Contains(ad.Id))
-                            {
-                                <text>Købsanmodning sendt</text>
-                            }
-                            else
-                            {
-                                <text>Send købsanmodning</text>
-                            }
+            <p>Din indkøbsliste er tom.</p>
+        }
+        else
+        {
+            // UC-04: Viser annoncerne fra indkøbslisten
+            @foreach (Ad ad in ads)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5>@ad.Name</h5>
+    
+                        <p>Pris: @ad.Price kr.</p>
+    
+                        <p>Beskrivelse: @ad.Description</p>
+    
+                        <p>Stand: @ad.Condition</p>
+    
+                        @if (ad.Status == "Active")
+                        {
+    
+                            <button class="btn btn-success"
+                                    disabled="@sentRequests.Contains(ad.Id)"
+                                    @onclick="() => SendRequest(ad.Id)">
+    
+                                @if (sentRequests.Contains(ad.Id))
+                                {
+                                    <text>Købsanmodning sendt</text>
+                                }
+                                else
+                                {
+                                    <text>Send købsanmodning</text>
+                                }
+                            </button>
+    
+                        }
+                        else
+                        {
+                            <p>Varen er ikke tilgængelig for køb.</p>
+                        }
+                        <button class="btn btn-danger ms-2"
+                                @onclick="() => RemoveFromShoppingList(ad.Id)">
+                            Fjern fra indkøbsliste
                         </button>
-
-                    }
-                    else
-                    {
-                        <p>Varen er ikke tilgængelig for køb.</p>
-                    }
-                    <button class="btn btn-danger ms-2"
-                            @onclick="() => RemoveFromShoppingList(ad.Id)">
-                        Fjern fra indkøbsliste
-                    </button>
-
-
+    
+                    </div>
                 </div>
-            </div>
+            }
         }
     }
-}
 
-@if (showRequests)
+    @if (showRequests)
     {
-        <h3 class="mt-4">Mine købsanmodninger</h3>
+        <h4 class="pageSubTitle">Mine købsanmodninger</h4>
 
         @if (requests.Count == 0)
         {
@@ -211,25 +210,24 @@
                     </div>
                 </div>
             }
-            
         }
-
     }
+}
 
 @code {
-    
+
     // Styrer om vi viser indkøbslisten eller købsanmodningerne
     private bool showRequests = false;
 
     // UC-04: Brugerens indkøbsliste
     private ShoppingList? shoppingList;
-    
+
     // UC-04: Gemmer annoncerne fra indkøbslisten
     private List<Ad> ads = new List<Ad>();
-    
+
     // UC-07: Gemmer brugerens købsanmodninger
     private List<PurchaseRequest> requests = new List<PurchaseRequest>();
-    
+
     // UC-07: Købsanmodninger der afventer svar
     private List<PurchaseRequest> pendingRequests = new List<PurchaseRequest>();
 
@@ -238,18 +236,21 @@
 
     // UC-07: Gemmer sælgernes navne
     private Dictionary<int, string> sellerNames = new Dictionary<int, string>();
-    
+
     // UC-07: Gemmer annoncerne fra købsanmodningerne
     private Dictionary<int, Ad> requestAds = new Dictionary<int, Ad>();
 
-    // Midlertidig testbruger
+    // brugerId
     private int userId;
+
+    // bool til at tjekke om bruger er logged in
+    private bool isLoggedIn = false;
 
     // UC-04: Henter indkøbslisten fra API
     protected override async Task OnInitializedAsync()
     {
         // UC-01: Henter den indloggede bruger
-        bool isLoggedIn = await login.IsLoggedIn();
+        isLoggedIn = await login.IsLoggedIn();
 
         if (!isLoggedIn)
         {

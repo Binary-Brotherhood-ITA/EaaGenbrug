@@ -46,7 +46,7 @@ else
     <!-- UC-08: Formular til at oprette en annonce -->
     @if (selectedPage == "create")
     {
-        <h3>Opret annonce</h3>
+        <h4 class="pageSubTitle">Opret annonce</h4>
         <p>Udfyld oplysningerne om den vare, du vil sælge.</p>
 
         <EditForm Model="@newAd"
@@ -112,11 +112,12 @@ else
                 </InputSelect>
             </div>
 
-            <!-- Valgfrit lokations-ID -->
+            <!-- Valgfrit lokationen -->
             <div class="mb-3">
-                <label>LocationId (valgfrit)</label>
+                <label>Lokation (valgfrit)</label>
                 <InputText @bind-Value="newAd.LocationId"
-                             class="form-control"/>
+                             class="form-control"
+                             placeholder="Hvis varen befinder sig på EAAA, kan du anføre lokalet"/>
             </div>
 
             <!-- Vælg om annoncen skal være aktiv -->
@@ -155,7 +156,7 @@ else
     <!-- Viser sælgerens egne annoncer -->
     @if (selectedPage == "mine")
     {
-        <h3>Mine annoncer</h3>
+        <h4 class="pageSubTitle">Mine annoncer</h4>
 
         <!-- Viser fejl hvis annoncer ikke kunne hentes -->
         @if (!string.IsNullOrWhiteSpace(loadStatus))
@@ -217,7 +218,7 @@ else
     <!-- UC-11: Viser sælgerens købsanmodninger -->
     @if (selectedPage == "requests")
     {
-        <h3>Købsanmodninger</h3>
+        <h4 class="pageSubTitle">Købsanmodninger</h4>
 
         <!-- Viser beskeder efter accept eller afvisning -->
         @if (!string.IsNullOrWhiteSpace(requestStatus))
@@ -290,11 +291,20 @@ else
     // Kategorier til formularen
     private List<string> categories = new()
     {
+        "Andet",
+        "Cykel",
+        "Belysning",
+        "Bil",
+        "Billeder",
+        "Briller",
         "Bøger",
         "Elektronik",
-        "Tøj",
+        "Køkkenudstyr",
         "Møbler",
-        "Andet"
+        "Fodtøj",
+        "Smykker",
+        "Sportsudstyr",
+        "Tøj"
     };
 
     // Varens mulige stande

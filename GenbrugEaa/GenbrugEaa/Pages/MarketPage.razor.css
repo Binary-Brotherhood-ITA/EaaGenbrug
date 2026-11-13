@@ -30,7 +30,7 @@
     width: 100% !important;
     height: auto !important;
     aspect-ratio: 3 / 4;
-    object-fit: cover;
+    object-fit: contain;
     background: var(--ws-soft);
     margin: 0 auto 13px !important;
     transition: filter .25s ease;
