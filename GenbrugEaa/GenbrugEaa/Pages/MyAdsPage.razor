@@ -189,13 +189,31 @@ else
                              alt="@ad.Name"
                              style="max-width:200px;"/>
                     }
+                    <!-- UC-09: Knap til at slette annoncen -->
+                    <button type="button" class="btn btn-danger"
+                            @onclick="() => deleteAdId = ad.Id">
+                        Slet annonce
+                    </button>
+
+                    <!-- Viser bekræftelse, hvis brugeren har trykket Slet -->
+                    @if (deleteAdId == ad.Id)
+                    {
+                        <p>Er du sikker på, at du vil slette annoncen?</p>
+
+                        <button type="button" class="btn btn-danger"
+                                @onclick="() => DeleteAd(ad.Id)">
+                            Ja, slet
+                        </button>
+
+                        <button type="button" class="btn btn-secondary"
+                                @onclick="() => deleteAdId = null">
+                            Annuller
+                        </button>
+                    }
                 </div>
             }
         }
     }
-
-
-
     <!-- UC-11: Viser sælgerens købsanmodninger -->
     @if (selectedPage == "requests")
     {
@@ -258,6 +276,9 @@ else
 
     // Objekt til oprettelse af en ny annonce
     private Ad newAd = new Ad { Status = "Active" };
+    
+    // Holder styr på hvilken annonce brugeren vil slette
+    private int? deleteAdId = null;
 
     // Liste med sælgerens egne annoncer
     private List<Ad> myAds = new();
@@ -433,7 +454,47 @@ else
         // Henter annoncer fra backend
         await LoadMyAds();
     }
-    
+    // UC-09: Sletter en af sælgerens annoncer
+    private async Task DeleteAd(int adId)
+    {
+        // Kontrollerer login og henter sælgerens ID
+        loggedIn = await login.IsLoggedIn();
+
+        if (!loggedIn)
+        {
+            loadStatus = "Du skal være logget ind.";
+            return;
+        }
+
+        sellerId = await login.GetUserId();
+
+        try
+        {
+            // DELETE sender annonce-ID og sælger-ID til AdController
+            HttpResponseMessage response = await Http.DeleteAsync(
+                "api/ad/" + adId + "?sellerId=" + sellerId);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Fjerner bekræftelsen og henter annoncerne igen
+                deleteAdId = null;
+                await ShowMyAds();
+
+                loadStatus = "Annoncen er slettet.";
+            }
+            else
+            {
+                // Viser fejl fra backend
+                string error = await response.Content.ReadAsStringAsync();
+                loadStatus = "Fejl: " + error;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            // Viser fejl, hvis backend ikke kan kontaktes
+            loadStatus = "Forbindelsesfejl: " + ex.Message;
+        }
+    }
     // GET: Henter sælgerens annoncer fra databasen
     private async Task LoadMyAds()
     {
@@ -576,5 +637,5 @@ else
             requestStatus = "Forbindelsesfejl: " + ex.Message;
         }
     }
-
+    
 }
