@@ -33,22 +33,31 @@
             @foreach (Ad ad in ads)
             {
                 <div class="card mb-3">
-                    <div class="card-body">
+                    <div class="card-body clearfix">
+                        
+                        @* UC-04: Viser annoncens billede til højre *@
+                        @if (!string.IsNullOrWhiteSpace(ad.ImgPath))
+                        {
+                            <img src="@ad.ImgPath"
+                                 alt="@ad.Name"
+                                 class="float-end ms-3 mb-2"
+                                 style="width:180px; height:180px; object-fit:cover;" />
+                        }
                         <h5>@ad.Name</h5>
-    
+
                         <p>Pris: @ad.Price kr.</p>
-    
+
                         <p>Beskrivelse: @ad.Description</p>
-    
+
                         <p>Stand: @ad.Condition</p>
-    
+
                         @if (ad.Status == "Active")
                         {
-    
+
                             <button class="btn btn-success"
                                     disabled="@sentRequests.Contains(ad.Id)"
                                     @onclick="() => SendRequest(ad.Id)">
-    
+
                                 @if (sentRequests.Contains(ad.Id))
                                 {
                                     <text>Købsanmodning sendt</text>
@@ -58,7 +67,7 @@
                                     <text>Send købsanmodning</text>
                                 }
                             </button>
-    
+
                         }
                         else
                         {
@@ -68,7 +77,7 @@
                                 @onclick="() => RemoveFromShoppingList(ad.Id)">
                             Fjern fra indkøbsliste
                         </button>
-    
+
                     </div>
                 </div>
             }
@@ -97,10 +106,18 @@
             @foreach (PurchaseRequest request in pendingRequests)
             {
                 <div class="card mb-3">
-                    <div class="card-body">
+                    <div class="card-body clearfix">
 
                         @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
                         {
+                            @* UC-07: Viser annoncens billede til højre *@
+                            @if (!string.IsNullOrWhiteSpace(ad.ImgPath))
+                            {
+                                <img src="@ad.ImgPath"
+                                     alt="@ad.Name"
+                                     class="float-end ms-3 mb-2"
+                                     style="width:180px; height:180px; object-fit:cover;" />
+                            }
                             <h5>@ad.Name</h5>
                             <p>Pris: @ad.Price kr.</p>
                         }
@@ -163,10 +180,18 @@
             @foreach (PurchaseRequest request in finishedRequests)
             {
                 <div class="card mb-3">
-                    <div class="card-body">
+                    <div class="card-body clearfix">
 
                         @if (requestAds.TryGetValue(request.AdId, out Ad? ad))
                         {
+                            @* UC-07: Viser annoncens billede til højre *@
+                            @if (!string.IsNullOrWhiteSpace(ad.ImgPath))
+                            {
+                                <img src="@ad.ImgPath"
+                                     alt="@ad.Name"
+                                     class="float-end ms-3 mb-2"
+                                     style="width:180px; height:180px; object-fit:cover;" />
+                            }
                             <h5>@ad.Name</h5>
                             <p>Pris: @ad.Price kr.</p>
                         }
