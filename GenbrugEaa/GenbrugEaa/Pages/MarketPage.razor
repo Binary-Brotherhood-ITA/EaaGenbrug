@@ -12,64 +12,118 @@
 	}
 	if(isLoggedIn && activeAds != null)
 	{
-		<p>Antal aktive annoncer: @activeAds.Count</p>
+		<p>Viser @GetFilteredAds().Count ud af @activeAds.Count aktive annoncer:</p>
+
+		<!-- SØGNING -->
+		<!-- Søgefelt: Brugeren kan søge efter tøjtype, fx dress, hoodie eller jacket. -->
+		<div class="col-md-6 mb-3">
+		    <label for="adSearch">Søg efter annoncer</label>
+		    <input id="adSearch"
+		           type="search"
+		           class="form-control"
+		           placeholder="Søg efter en annonce ..."
+		           @bind="searchText"
+		           @bind:event="oninput" />
+		</div>
+
+		<!-- FILTRERING KATEGORI -->
+		<div class="col-md-3 mb-3">
+		    <label for="adCategory">Filtrer efter kategori</label>
+		    <select id="adCategory"
+		            class="form-select"
+		            @bind="selectedCategory">
+		        <option value="All">Alle kategorier</option>
+		        @foreach (string category in GetCategories())
+		        {
+		            <option value="@category">@category</option>
+		        }
+		    </select>
+		</div>
+
+		<!-- SORTERING -->
+		<div class="col-md-3 mb-3">
+		    <label for="adSort">Sorter efter pris</label>
+		    <select id="adSort"
+		            class="form-select"
+		            @bind="selectedSort">
+		        <option value="Random">Tilfældig rækkefølge</option>
+				<option value="PriceLowHigh">Pris: Lav til høj</option>
+				<option value="PriceHighLow">Pris: Høj til lav</option>
+		    </select>
+		</div>
+
+		<!-- RYD FILTRE -->
+		<div class="mb-3">
+		    <button class="btn btn-secondary"
+		            @onclick="ClearFilters">
+		        Ryd filtre
+		    </button>
+		</div>
+
 
 		<!-- Annonce Grid -->
-		<div class="row"> 
-			@foreach (Ad ad in activeAds)
-			{
-				<div class="col-md-4 mb-3">
-			        <div class="border p-3">
+		@if (GetFilteredAds().Count == 0)
+		{
+		    <p>Ingen annoncer matcher din søgning eller dine filtre.</p>
+		}
+		else
+		{
+			<div class="row"> 
+				@foreach (Ad ad in GetFilteredAds())
+				{
+					<div class="col-md-4 mb-3">
+				        <div class="border p-3">
 
-						<!-- Viser kun billede, hvis ad.ImgPath ikke er tomt -->
-						@if (!string.IsNullOrWhiteSpace(ad.ImgPath))
-						{
-							<img src="@ad.ImgPath"
-								 alt="@ad.Category"
-								 class="img-fluid mb-3"
-								 style="width: 100%; height: 250px; object-fit: cover;" />
-						}
-
-						<h4 class="ad-title">@ad.Name</h4>
-
-						<div class="ad-details">
-							<p><strong>@ad.Price kr</strong>.</p>
-							<p>@ad.Category</p>
-						</div>
-
-						<!-- Knap åbner AdDetailsModal vindue. Sender to aargumenter: Ad-objektet og en bool som fortæller om "Tilføj til indkøb"-knap skal være disabled -->
-						<div class="ad-buttons">
-							<button type="button" class="btn btn-primary"
-									@onclick="() => OpenAdModal(ad)">
-								Vis mere
-							</button>
-
-							<!-- Hvis vi har en shoppingList og ad.Id allerede findes i ShoppingList.AdIds -->
-							@if (shoppingList != null && shoppingList.AdIds.Contains(ad.Id))
+							<!-- Viser kun billede, hvis ad.ImgPath ikke er tomt -->
+							@if (!string.IsNullOrWhiteSpace(ad.ImgPath))
 							{
-								<button class="btn btn-primary" disabled>
-									Allerede tilføjet
-								</button>
+								<img src="@ad.ImgPath"
+									 alt="@ad.Category"
+									 class="img-fluid mb-3"
+									 style="width: 100%; height: 250px; object-fit: cover;" />
 							}
-							else
-							{
+
+							<h4 class="ad-title">@ad.Name</h4>
+
+							<div class="ad-details">
+								<p><strong>@ad.Price kr</strong>.</p>
+								<p>@ad.Category</p>
+							</div>
+
+							<!-- Knap åbner AdDetailsModal vindue. Sender to aargumenter: Ad-objektet og en bool som fortæller om "Tilføj til indkøb"-knap skal være disabled -->
+							<div class="ad-buttons">
 								<button type="button" class="btn btn-primary"
-								disabled="@(ad.SellerId == userId)"
-								@onclick="() => AddToShoppingList(ad.Id)">
-									Tilføj til indkøb
+										@onclick="() => OpenAdModal(ad)">
+									Vis mere
 								</button>
+
+								<!-- Hvis vi har en shoppingList og ad.Id allerede findes i ShoppingList.AdIds -->
+								@if (shoppingList != null && shoppingList.AdIds.Contains(ad.Id))
+								{
+									<button class="btn btn-primary" disabled>
+										Allerede tilføjet
+									</button>
+								}
+								else
+								{
+									<button type="button" class="btn btn-primary"
+									disabled="@(ad.SellerId == userId)"
+									@onclick="() => AddToShoppingList(ad.Id)">
+										Tilføj til indkøb
+									</button>
+								}
+							</div>
+
+							<!-- Besked vises kun hvis selectedAdId matcher den aktuelle annonces Id og hvis shoppingListMsg ikke er tom.-->
+							@if (selectedAdId == ad.Id && !string.IsNullOrWhiteSpace(shoppingListMsg))
+							{
+								<p>@shoppingListMsg</p>
 							}
 						</div>
-
-						<!-- Besked vises kun hvis selectedAdId matcher den aktuelle annonces Id og hvis shoppingListMsg ikke er tom.-->
-						@if (selectedAdId == ad.Id && !string.IsNullOrWhiteSpace(shoppingListMsg))
-						{
-							<p>@shoppingListMsg</p>
-						}
 					</div>
-				</div>
-			}
-		</div>
+				}
+			</div>
+		}
 
 		<!-- Modal vindue til at vise flere detaljer om annoncen - Vi sender metoden AddToShoppingList med til komponenten -->
 		<AdDetailsModal Ad="selectedAd"
@@ -84,7 +138,6 @@
 
 @code {
 	private List<Ad>? activeAds = new();// List til active annoncer
-	private List<Ad>? filteredAds = new();// List til filter og søgning
 	private ShoppingList? shoppingList = new(); // List til brugerens ShoppingList(Indkøb)
 	private bool contentLoaded = false; // bool til at styre om siden er færdig med at hente indhold fra backend
 	private string contentMsg = ""; // Generel besked i toppen af siden, hvis der ikke er indlæst indhold
@@ -98,6 +151,10 @@
 
 	private bool isLoggedIn = false;
 	private int? userId = null;
+
+	private string searchText = ""; // Søgefeltets indhold. En tom tekst betyder, at søgningen ikke begrænser resultatet.
+	private string selectedCategory = "All"; // Kategori-filter starter med alle kategorier.
+	private string selectedSort = "Random"; // Standard-sortering er pris fra lav til høj.
 
 	// Henter List med Ads, hvor Ad.Status==Active. Hvis der returneres null laves en ny tom List. 
 	protected override async Task OnInitializedAsync()
@@ -119,6 +176,8 @@
 
 		// Henter Ads fra backend
 		activeAds = await Http.GetFromJsonAsync<List<Ad>>("api/ad/active") ?? new List<Ad>();
+		// Bland annoncerne i en tilfældig rækkefølge ved indlæsning.
+		activeAds = activeAds.OrderBy(ad => Random.Shared.Next()).ToList();
 		contentLoaded = true;
 		if(activeAds.Count == 0)
 		{
@@ -174,5 +233,75 @@
 	private void CloseAdModal()
 	{
 		showAdModal = false;
+	}
+
+	// Henter alle kategorier fra de aktive annoncer som hentes fra DB.
+	private List<string> GetCategories()
+	{
+		List<string> categories = new();
+		foreach (Ad ad in activeAds)
+		{
+			// Undgår tomme kategorier og dubletter.
+			if (!string.IsNullOrWhiteSpace(ad.Category) && !categories.Contains(ad.Category))
+			{
+				categories.Add(ad.Category);
+			}
+		}
+		// Sorterer kategorier alfabetisk.
+		categories = categories.OrderBy(category => category).ToList();
+		return categories;
+	}
+
+
+	// Finder annoncer, som matcher søgning og filtrering og sorterer dem efter brugerens valg.
+	private List<Ad> GetFilteredAds()
+	{
+		// Opretter en ny liste til annoncerne.
+		List<Ad> filteredAds = new();
+		// Fjerner mellemrum før og efter søgeteksten.
+		string search = searchText.Trim();
+		// Gennemgår alle aktive annoncer.
+		foreach (Ad ad in activeAds)
+		{
+			// Søger både i annoncenavn og kategori. || fordi enten navn eller kategori skal matche søgningen 
+			bool searchMatches = 
+				search == "" || 
+				ad.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+				ad.Category.Contains(search, StringComparison.OrdinalIgnoreCase);
+			// Kontrollerer om annoncen matcher valgt kategori.
+			bool categoryMatches =
+				selectedCategory == "All" ||
+				string.Equals(ad.Category, selectedCategory, StringComparison.OrdinalIgnoreCase);
+
+			// Begge betingelser skal være opfyldt - både søgning og filtrering skal gælde for de ads som filteredAds indholder
+			if (searchMatches && categoryMatches)
+			{
+				filteredAds.Add(ad);
+			}
+		}
+
+		// Sorterer annoncerne efter pris.
+		if (selectedSort == "PriceLowHigh")
+		{
+		    filteredAds = filteredAds
+		        .OrderBy(ad => ad.Price)
+		        .ToList();
+		}
+		else if (selectedSort == "PriceHighLow")
+		{
+		    filteredAds = filteredAds
+		        .OrderByDescending(ad => ad.Price)
+		        .ToList();
+		}
+		return filteredAds;
+	}
+	
+	
+	// Nulstiller søgning, kategori og sortering.
+	private void ClearFilters()
+	{
+	    searchText = "";
+	    selectedCategory = "All";
+	    selectedSort = "Random";
 	}
 }
