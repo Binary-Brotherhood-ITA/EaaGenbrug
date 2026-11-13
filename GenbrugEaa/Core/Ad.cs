@@ -34,7 +34,7 @@ public class Ad
     public string Condition { get; set; } 
 
     // Navn på lokationen, hvis varen har en
-    public int? LocationId { get; set; }
+    public string? LocationId { get; set; }
 
     // Dato for oprettelse af annoncen
     public DateTime CreatedAt { get; set; }
