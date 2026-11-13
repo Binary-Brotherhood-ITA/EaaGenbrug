@@ -3,16 +3,17 @@
 @using Core
 
 <div class="mb-4">
-    <button class="btn btn-primary me-2"
+    <button class="btn @(showRequests ? "btn-outline-primary" : "btn-primary") me-2"
             @onclick="() => showRequests = false">
         Mine indkøb
     </button>
 
-    <button class="btn btn-primary"
+    <button class="btn @(showRequests ? "btn-primary" : "btn-outline-primary")"
             @onclick="() => showRequests = true">
         Sendte anmodninger
     </button>
 </div>
+
 
 <p>@message</p>
 
