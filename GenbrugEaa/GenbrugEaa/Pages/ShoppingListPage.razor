@@ -359,24 +359,61 @@
     // UC-05: Sender en købsanmodning
     private async Task SendRequest(int adId)
     {
+        // Sender købsanmodningen til backend
         HttpResponseMessage response = await Http.PostAsync(
             $"api/PurchaseRequest/send/{adId}/{userId}", null);
 
-       
-        if (response.IsSuccessStatusCode)
-        {
-            // UC-05: Husker at købsanmodningen er sendt
-            sentRequests.Add(adId);
-
-            message = "Købsanmodningen er sendt.";
-        }
-
-        else
+        // Stopper, hvis købsanmodningen ikke blev sendt
+        if (!response.IsSuccessStatusCode)
         {
             message = "Købsanmodningen kunne ikke sendes.";
+            return;
         }
+
+        // Husker at købsanmodningen er sendt
+        sentRequests.Add(adId);
+
+        // Finder annoncen i indkøbslisten
+        Ad? ad = ads.Find(a => a.Id == adId);
+
+        if (ad != null)
+        {
+            // Gemmer annoncens oplysninger
+            requestAds[adId] = ad;
+
+            // Henter sælgerens navn, hvis vi ikke allerede har det
+            if (!sellerNames.ContainsKey(ad.SellerId))
+            {
+                try
+                {
+                    User? seller = await Http.GetFromJsonAsync<User>(
+                        $"api/user/{ad.SellerId}");
+
+                    sellerNames[ad.SellerId] = seller?.Name ?? "Ukendt sælger";
+                }
+                catch (HttpRequestException)
+                {
+                    sellerNames[ad.SellerId] = "Ukendt sælger";
+                }
+            }
+        }
+
+        // Henter de opdaterede købsanmodninger
+        requests = await Http.GetFromJsonAsync<List<PurchaseRequest>>(
+            $"api/purchaserequest/buyer/{userId}") ?? new List<PurchaseRequest>();
+
+        // Finder de afventende købsanmodninger
+        pendingRequests = requests.FindAll(r => r.Status == "Pending");
+
+        // Finder de afsluttede købsanmodninger
+        finishedRequests = requests.FindAll(r =>
+            r.Status == "accepted" ||
+            r.Status == "declined" ||
+            r.Status == "cancelled");
+
+        // Viser en besked til brugeren
+        message = "Købsanmodningen er sendt.";
     }
-    
     private string message = "";
     
     // UC-05: Gemmer ID på annoncer, hvor købsanmodningen er sendt
