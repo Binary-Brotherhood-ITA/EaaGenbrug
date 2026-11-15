@@ -30,13 +30,13 @@ else
             Opret annonce
         </button>
 
-        <button type="button" class="btn btn-secondary"
+        <button type="button" class="btn btn-primary"
                 @onclick="ShowMyAds">
             Mine annoncer
         </button>
 
         <!-- Åbner og henter sælgerens købsanmodninger -->
-        <button type="button" class="btn btn-secondary"
+        <button type="button" class="btn btn-primary"
                 @onclick="ShowRequests">
             Købsanmodninger
         </button>
@@ -172,31 +172,145 @@ else
         else
         {
             <!-- Viser annoncerne fra databasen -->
+
+            <!-- Viser annoncerne fra databasen -->
             @foreach (Ad ad in myAds)
             {
                 <div class="border rounded p-3 mb-3">
-                    <h4>@ad.Name</h4>
 
-                    <p>Pris: @ad.Price kr.</p>
-                    <p>Kategori: @ad.Category</p>
-                    <p>Stand: @ad.Condition</p>
-                    <p>Status: @ad.Status</p>
-                    <p>@ad.Description</p>
+                    <!-- Placerer tekst til venstre og billede til højre -->
+                    <div class="d-flex justify-content-between gap-3">
 
-                    <!-- Viser billedet hvis der findes et link -->
-                    @if (!string.IsNullOrWhiteSpace(ad.ImgPath))
+                        <!-- Annoncens oplysninger -->
+                        <!-- Annoncens oplysninger -->
+                        <div>
+                            <h4>@ad.Name</h4>
+
+                            <p class="mb-1">Pris: @ad.Price kr.</p>
+                            <p class="mb-1">Kategori: @ad.Category</p>
+                            <p class="mb-1">Stand: @ad.Condition</p>
+                            <p class="mb-1">Status: @ad.Status</p>
+                            <p class="mb-2">@ad.Description</p>
+
+                            <!-- UC-09: Slet-knap under teksten -->
+                            <button type="button" class="btn btn-danger"
+                                    @onclick="() => deleteAdId = ad.Id">
+                                Slet annonce
+                            </button>
+
+                            <!-- UC-10: Åbner redigering af annoncen -->
+                            <button type="button" class="btn btn-secondary"
+                                    @onclick="() => StartEditAd(ad)">
+                                Rediger annonce
+                            </button>
+                        </div>
+
+                        <!-- Viser billedet til højre -->
+                        @if (!string.IsNullOrWhiteSpace(ad.ImgPath))
+                        {
+                            <img src="@ad.ImgPath"
+                                 alt="@ad.Name"
+                                 style="width:200px; height:150px; object-fit:contain;"/>
+                        }
+                    </div>
+
+<!-- UC-10: Viser formularen for den valgte annonce -->
+@if (editAdId == ad.Id)
                     {
-                        <img src="@ad.ImgPath"
-                             alt="@ad.Name"
-                             style="max-width:200px;"/>
-                    }
-                    <!-- UC-09: Knap til at slette annoncen -->
-                    <button type="button" class="btn btn-danger"
-                            @onclick="() => deleteAdId = ad.Id">
-                        Slet annonce
-                    </button>
+                        <h4>Rediger annonce</h4>
 
-                    <!-- Viser bekræftelse, hvis brugeren har trykket Slet -->
+                        <EditForm Model="@editAd" OnSubmit="SaveEditedAd"
+                                  FormName="EditAdForm">
+
+                            <!-- Annoncens navn -->
+                            <div class="mb-3">
+                                <label>Navn</label>
+                                <InputText @bind-Value="editAd.Name"
+                                           class="form-control"/>
+                            </div>
+
+                            <!-- Annoncens pris -->
+                            <div class="mb-3">
+                                <label>Pris</label>
+                                <InputNumber @bind-Value="editAd.Price"
+                                             class="form-control"/>
+                            </div>
+
+                            <!-- Kategori -->
+                            <div class="mb-3">
+                                <label>Kategori</label>
+                                <InputSelect @bind-Value="editAd.Category"
+                                             class="form-select">
+                                    @foreach (string category in categories)
+                                    {
+                                        <option value="@category">@category</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <!-- Beskrivelse -->
+                            <div class="mb-3">
+                                <label>Beskrivelse</label>
+                                <InputTextArea @bind-Value="editAd.Description"
+                                               class="form-control"/>
+                            </div>
+
+                            <!-- Billedlink -->
+                            <div class="mb-3">
+                                <label>Billedlink (valgfrit)</label>
+                                <InputText @bind-Value="editAd.ImgPath"
+                                           class="form-control"/>
+                            </div>
+
+                            <!-- Varens stand -->
+                            <div class="mb-3">
+                                <label>Stand</label>
+                                <InputSelect @bind-Value="editAd.Condition"
+                                             class="form-select">
+                                    @foreach (string condition in conditions)
+                                    {
+                                        <option value="@condition">@condition</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <!-- Lokation -->
+                            <div class="mb-3">
+                                <label>LocationId (valgfrit)</label>
+                                <InputText @bind-Value="editAd.LocationId"
+                                             class="form-control"/>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="mb-3">
+                                <label>Status</label>
+                                <InputSelect @bind-Value="editAd.Status"
+                                             class="form-select">
+                                    <option value="Active">Aktiv</option>
+                                    <option value="Inactive">Inaktiv</option>
+                                </InputSelect>
+                            </div>
+
+                            <!-- Gem ændringer -->
+                            <button type="submit" class="btn btn-primary">
+                                Gem ændringer
+                            </button>
+
+                            <!-- Annuller redigering -->
+                            <button type="button" class="btn btn-secondary"
+                                    @onclick="() => editAdId = null">
+                                Annuller
+                            </button>
+
+                        </EditForm>
+                    }
+                    
+
+
+
+
+
+                    <!-- Viser bekræftelse, hvis brugeren trykker Slet -->
                     @if (deleteAdId == ad.Id)
                     {
                         <p>Er du sikker på, at du vil slette annoncen?</p>
@@ -211,10 +325,12 @@ else
                             Annuller
                         </button>
                     }
+
                 </div>
             }
         }
     }
+
     <!-- UC-11: Viser sælgerens købsanmodninger -->
     @if (selectedPage == "requests")
     {
@@ -264,7 +380,7 @@ else
 @code {
 
     // Bestemmer hvilken del af siden der vises
-    private string selectedPage = "create";
+    private string selectedPage = "mine";
 
     // Viser først siden når login er kontrolleret
     private bool isLoaded = false;
@@ -280,6 +396,11 @@ else
     
     // Holder styr på hvilken annonce brugeren vil slette
     private int? deleteAdId = null;
+    // Holder styr på hvilken annonce der skal redigeres
+    private int? editAdId = null;
+
+// Indeholder annoncens oplysninger, som skal redigeres
+    private Ad editAd = new Ad();
 
     // Liste med sælgerens egne annoncer
     private List<Ad> myAds = new();
@@ -331,6 +452,9 @@ else
         {
             // Henter ID på den indloggede bruger
             sellerId = await login.GetUserId();
+
+            // Henter automatisk sælgerens annoncer
+            await LoadMyAds();
         }
 
         // Login er nu kontrolleret
@@ -526,6 +650,91 @@ else
         {
             // Viser fejl hvis backend ikke kan kontaktes
             loadStatus = "Kunne ikke hente annoncer: " + ex.Message;
+        }
+    }
+    // UC-10: Starter redigering af en annonce
+    private void StartEditAd(Ad ad)
+    {
+        // Gemmer ID på annoncen, der skal redigeres
+        editAdId = ad.Id;
+
+        // Kopierer annoncens oplysninger til redigeringsformularen
+        editAd = new Ad
+        {
+            Id = ad.Id,
+            SellerId = ad.SellerId,
+            Name = ad.Name,
+            Price = ad.Price,
+            Category = ad.Category,
+            Description = ad.Description,
+            ImgPath = ad.ImgPath,
+            Condition = ad.Condition,
+            LocationId = ad.LocationId,
+            Status = ad.Status,
+            CreatedAt = ad.CreatedAt,
+            StatusUpdatedAt = ad.StatusUpdatedAt
+        };
+    }
+    // UC-10: Gemmer ændringer til en annonce
+    private async Task SaveEditedAd()
+    {
+        // Kontrollerer om brugeren er logget ind
+        loggedIn = await login.IsLoggedIn();
+
+        if (!loggedIn)
+        {
+            loadStatus = "Du skal være logget ind.";
+            return;
+        }
+
+        // Henter den indloggede brugers ID
+        sellerId = await login.GetUserId();
+
+        // Tjekker obligatoriske felter
+        if (string.IsNullOrWhiteSpace(editAd.Name) ||
+            string.IsNullOrWhiteSpace(editAd.Category) ||
+            string.IsNullOrWhiteSpace(editAd.Description) ||
+            string.IsNullOrWhiteSpace(editAd.Condition))
+        {
+            loadStatus = "Udfyld alle obligatoriske felter.";
+            return;
+        }
+
+        // Tjekker om prisen er gyldig
+        if (editAd.Price < 0)
+        {
+            loadStatus = "Prisen må ikke være negativ.";
+            return;
+        }
+
+        try
+        {
+            // PUT sender de opdaterede oplysninger til AdController
+            HttpResponseMessage response =
+                await Http.PutAsJsonAsync("api/ad/" + editAd.Id, editAd);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Lukker redigeringsformularen
+                editAdId = null;
+
+                // Henter annoncerne igen fra databasen
+                await ShowMyAds();
+
+                loadStatus = "Annoncen er opdateret!";
+            }
+            else
+            {
+                // Henter fejlbeskeden fra backend
+                string error = await response.Content.ReadAsStringAsync();
+
+                loadStatus = "Fejl: " + error;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            // Viser fejl, hvis backend ikke kan kontaktes
+            loadStatus = "Forbindelsesfejl: " + ex.Message;
         }
     }
     
