@@ -17,7 +17,7 @@ namespace Core
         [Required]
         public int AdId { get; set; }
        
-        // En ny købsanmodning starter med status awaiting
+        // En ny købsanmodning starter med status pending
         public string Status { get; set; } = "Pending";
 
         // Gemmer tidspunktet hvor købsanmodningen oprettes
