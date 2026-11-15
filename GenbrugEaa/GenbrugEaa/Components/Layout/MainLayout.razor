@@ -34,7 +34,7 @@
     public string loggedInAs = "";
 
     /* OnInitializedAsync():
-     * når siden indlæses henter vi user's fornavn
+     * Når siden indlæses henter vi user's fornavn
      * OnUserStateChanged +=: vi tilmelder os LoginService's Event
      * Når LoginService's OnUserStateChanged udløses, kaldes UpdateLoginStatus
      */
@@ -47,7 +47,7 @@
 
     /* UpdateLoginStatus():
      * Henter user's fornavn
-     * StateHasChanged() fortæller Vlazor, at komponenten skal renders igen, så fornavn vises i MainLayout.
+     * StateHasChanged() fortæller Blazor, at komponenten skal renders igen, så fornavn vises i MainLayout.
      * async void fordi LoginService's Action-event forventer en metode uden returværdi.
      */
     private async void UpdateLoginStatus()

@@ -36,10 +36,6 @@
     transition: filter .25s ease;
 }
 
-.row > .col-md-4:hover > .border > img {
-    filter: brightness(0.97);
-}
-
 /* Pæn placeholder, hvis et produkt ikke har et billedlink. */
 .row > .col-md-4 > .border:not(:has(img))::before {
     content: "IMAGE NOT FOUND";
