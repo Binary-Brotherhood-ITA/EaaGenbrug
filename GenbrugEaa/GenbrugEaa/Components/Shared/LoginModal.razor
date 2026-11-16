@@ -24,13 +24,13 @@
             <h4>Log ind</h4>
 
             <InputText @bind-Value="username"
-                       @onkeydown="HandleKeyDown"
+                       @onkeyup="HandleKeyDown"
                        class="form-control mb-2"
                        placeholder="Indtast brugernavn" />
 
             <InputText type="password"
                        @bind-Value="password"
-                       @onkeydown="HandleKeyDown"
+                       @onkeyup="HandleKeyDown"
                        class="form-control mb-2"
                        placeholder="Indtast password" />
 
@@ -91,9 +91,10 @@
 
     /* OnClickLogin():
      * Kalder LoginService.UserLogin for at finde match med username && password i backend. 
-     * Hvis der findes et match, returneres User.UserId og det første ord i User.Name
-     * Hvis true, kaldes LoginService.SetUserSession og modal vinduet lukker. 
-     * Nødt til at skrive userId.Value, fordi LoginService forventer en int -- .Value beregner heltalsværdien int-værdien. 
+     * Hvis der findes et match, returneres User.UserId og det første ord i User.Name. 
+     * Hvis true, kaldes LoginService.SetUserSession
+     * (Nødt til at skrive userId.Value, fordi LoginService forventer en int -- .Value beregner heltalsværdien int-værdien)
+     * (nav.Uri, forceLoad: true): Navigerer til den aktuelle side og tvinger browser til at hente siden igen fra serveren.
      */    
     private async Task OnClickLogin()
     {
@@ -102,9 +103,7 @@
         if (userId != null && username != null)
         {
             await login.SetUserSession(userId.Value, username, firstName);
-            isLoggedIn = true;
-            CloseLoginModal();
-            nav.NavigateTo("/");    
+            nav.NavigateTo(nav.Uri, forceLoad: true);  
         }
         else
         {
@@ -112,10 +111,16 @@
         }
     }
 
-    // kalder LoginService.Logout
+    /* OnClickLogout():
+     * Kalder LoginService.Logout
+     * Tvinger browser til at hente siden igen fra serveren: 
+     * * * Navigerer til den aktuelle side (nav.Uri er den aktuelle URL, fx /market)
+     * * * forceLoad: true tvinger browser til at hente siden på ny.
+     */ 
     private async Task OnClickLogout()
     {
         await login.Logout();
         isLoggedIn = false;
+        nav.NavigateTo(nav.Uri, forceLoad: true);
     }
 }

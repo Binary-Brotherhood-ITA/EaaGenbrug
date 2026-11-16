@@ -47,7 +47,7 @@ namespace GenbrugEaa.Services
     {
         private readonly HttpClient Http; // opretter et felt, som klassen kan bruge
         private readonly ISessionStorageService sessionStorage; // opretter felt, som klassen kan bruge
-        public event Action? OnUserStateChanged; // Opretter et event OnUserStateChanged. Action? er en type, der repræsenterer en etode uden parametre og uden returværdi.
+        public event Action? OnUserStateChanged; // Opretter et event OnUserStateChanged. Action? er en type, der repræsenterer en metode uden parameter og returværdi.
 
         // Constructor
         public LoginService(HttpClient http, ISessionStorageService storage)
@@ -98,7 +98,7 @@ namespace GenbrugEaa.Services
 
         /* Logout():
          * Når bruger logger ud skal LoginService.Logout kaldes
-         * Fjerner info om userId, username, firstName og om bruger er logget ind fra sessionStorage.
+         * Sletter data med userId, username, firstName og om bruger er logget ind fra sessionStorage.
          * OnUserStateChanged?.Invoke(): Fortæller resten af appen, når brugerstatus ændres. 
          * "Hvis nogen lytter på dette event, så kald alle metoder, der har tilmeldt sig"
          */

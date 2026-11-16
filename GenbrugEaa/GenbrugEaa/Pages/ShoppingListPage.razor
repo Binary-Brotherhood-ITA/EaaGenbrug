@@ -287,34 +287,36 @@
 
         try
         {
-            shoppingList = await Http.GetFromJsonAsync<ShoppingList>(
-                $"api/shoppinglist/{userId}");
-           
-            // UC-04: Henter oplysninger om hver annonce
-            if (shoppingList != null)
-            {
-                foreach (int adId in shoppingList.AdIds)
-                {
-                    Ad? ad = await Http.GetFromJsonAsync<Ad>(
-                        $"api/ad/{adId}");
+            shoppingList = await Http.GetFromJsonAsync<ShoppingList>($"api/shoppinglist/{userId}");
+        }
+        catch (HttpRequestException ex)
+        {
+            message = "Fejl ved hentning af indkøbsliste: " + ex.Message;
+        }
 
+        // UC-04: Henter oplysninger om hver annonce
+        if (shoppingList != null)
+        {
+            foreach (int adId in shoppingList.AdIds)
+            {
+                try
+                {
+                    Ad? ad = await Http.GetFromJsonAsync<Ad>($"api/ad/{adId}");
                     if (ad != null)
                     {
                         ads.Add(ad);
                     }
                 }
+                catch (HttpRequestException ex)
+                {
+                    message = message + $"Kunne ikke hente annonce {adId}: {ex.Message}";
+                }
             }
         }
-        catch (HttpRequestException)
-        {
-            shoppingList = null;
-        }
-        
         // UC-07: Henter brugerens købsanmodninger
         try
         {
-            requests = await Http.GetFromJsonAsync<List<PurchaseRequest>>(
-                $"api/purchaserequest/buyer/{userId}") ?? new List<PurchaseRequest>();
+            requests = await Http.GetFromJsonAsync<List<PurchaseRequest>>($"api/purchaserequest/buyer/{userId}") ?? new List<PurchaseRequest>();
         }
        
         catch (HttpRequestException ex)
@@ -346,8 +348,7 @@
             {
                 try
                 {
-                    User? seller = await Http.GetFromJsonAsync<User>(
-                        $"api/user/{request.SellerId}");
+                    User? seller = await Http.GetFromJsonAsync<User>($"api/user/{request.SellerId}");
 
                     sellerNames[request.SellerId] = seller?.Name ?? "Ukendt sælger";
                 }
@@ -365,8 +366,7 @@
             {
                 try
                 {
-                    Ad? ad = await Http.GetFromJsonAsync<Ad>(
-                        $"api/ad/{request.AdId}");
+                    Ad? ad = await Http.GetFromJsonAsync<Ad>($"api/ad/{request.AdId}");
 
                     if (ad != null)
                     {
@@ -386,8 +386,7 @@
     private async Task SendRequest(int adId)
     {
         // Sender købsanmodningen til backend
-        HttpResponseMessage response = await Http.PostAsync(
-            $"api/PurchaseRequest/send/{adId}/{userId}", null);
+        HttpResponseMessage response = await Http.PostAsync($"api/PurchaseRequest/send/{adId}/{userId}", null);
 
         // Stopper, hvis købsanmodningen ikke blev sendt
         if (!response.IsSuccessStatusCode)

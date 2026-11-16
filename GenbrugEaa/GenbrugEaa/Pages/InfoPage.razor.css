@@ -1,0 +1,65 @@
+/* CSS for InfoPage component */
+/* Overordnet side */
+.info-page {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Introduktion */
+.welcome-section {
+    padding: 30px 0 35px;
+}
+
+/* Grid med de tre lokaler */
+.location-menu {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 25px;
+}
+
+/* Kort */
+.location-card {
+    border: 1px solid var(--ws-border);
+    border-radius: 12px;
+    background-color: var(--ws-surface);
+    overflow: hidden;
+}
+
+    /* Billeder */
+    .location-card img {
+        display: block;
+        width: 100%;
+        height: 230px;
+        object-fit: cover;
+    }
+
+/* Tekstindhold */
+.location-card-content {
+    padding: 22px;
+}
+
+    .location-card-content h4 {
+        font-family: Georgia, serif;
+        margin-bottom: 18px;
+        color: var(--ws-text);
+    }
+
+    .location-card-content p {
+        margin-bottom: 12px;
+        color: var(--ws-text);
+        line-height: 1.5;
+    }
+
+/* Responsivt layout */
+@media (max-width: 768px) {
+    .location-menu {
+        grid-template-columns: 1fr;
+    }
+}
+
+.opening-hours {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 15px;
+    margin-left: 10px;
+}

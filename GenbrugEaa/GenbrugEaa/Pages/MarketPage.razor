@@ -12,7 +12,6 @@
 	}
 	if(isLoggedIn && activeAds != null)
 	{
-		<p>Viser @GetFilteredAds().Count ud af @activeAds.Count aktive annoncer</p>
 
 		<!-- SØGNING -->
 		<!-- Søgefelt: Brugeren kan søge efter tøjtype, fx dress, hoodie eller jacket. -->
@@ -60,6 +59,8 @@
 		    </button>
 		</div>
 
+		<!-- Status besked med antal viste annoncer -->
+		<p>Viser @GetFilteredAds().Count ud af @activeAds.Count aktive annoncer</p>
 
 		<!-- Annonce Grid -->
 		@if (GetFilteredAds().Count == 0)
