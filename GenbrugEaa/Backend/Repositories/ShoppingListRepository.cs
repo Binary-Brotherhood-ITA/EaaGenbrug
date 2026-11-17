@@ -69,8 +69,7 @@ public class ShoppingListRepository
             var filter = Builders<ShoppingList>.Filter.Eq(list => list.BuyerId, userId);
 
             // Fjerner annoncens ID fra listen
-            var update = Builders<ShoppingList>.Update
-                .Pull(list => list.AdIds, adId);
+            var update = Builders<ShoppingList>.Update.Pull(list => list.AdIds, adId);
 
             // Gemmer ændringen i MongoDB
             UpdateResult result = _shoppingLists.UpdateOne(filter, update);
